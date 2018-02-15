@@ -37,3 +37,32 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
 - in the terminal, the logs coming from the computer have a computer icon, while the logs from Webpack have a box icon
 
 ## Lesson 4 - Routing
+- Essentially when people go to a URL, you need to do stuff!
+  - query the database
+  - filter through a list of stores
+  - modify that data in some way
+  - finally send the data to the user
+- Express.js routing
+  - in index.js
+    - import Express `const express = require('express');`
+    - grab the router off of Express `const router = express.Router();`
+    - define all your routes
+    ```javascript
+    router.get('/', (req, res) => {
+    res.send('Hey! It Works!');
+    });
+    ```
+    - when somebody visits the URL ('/'), the function is going to give you three things
+      - request `req`, which is an object full of information that's coming in
+      - response `res`, which is an object full of methods for sending data back to the user
+      - next `next`, which will be handled by middleware file
+  - in app.js
+    - import routes from index.js `const express = require('./routes/index');`
+    - then tell Express to use those routes `app.use('/', routes):`
+      - can do a separate admin router too `app.use('/admin' adminRoutes);`
+    - handles Middleware as well
+      - `app.use(bodyParser.json());` and `app.use(bodyParser.urlencoded({ extended: false }));` takes the data in the request, checks the URL, and puts all of the data so we can easily access it through `request.query` or  `request.body`
+- error "Headers are already sent" - don't send data twice e.g. `res.send` with `res.json`
+- data from the url `localhost:7777/?name=wes&age=100` is in the request `req.query.name`
+- putting variables in a route `router.get('/reverse/:name')`
+- obtaining variables in a route `req.params.name`
