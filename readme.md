@@ -70,5 +70,46 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
 
 ## Lesson 5 - Templating
 - `res.render` is going to render out a template.
-- PUG is very popular templating language for Node
+- PUG is very popular templating language in the Node community
   - used to be called Jade
+- in `app.js`
+  - we set the folder where we keep our PUG files, AKA our Views folder
+  - we set the templating engine to be PUG
+    - mustache and EJS are other templating engines
+- in `index.js`
+  - `res.render()` will take two things
+    - a name of a template to render out, AKA the View
+    - an object whose properties define local variables, AKA locals
+      - 
+      ```javascript
+      res.render('hello', {
+        name: 'wes',
+        dog: 'ziggy'
+      })
+      ```
+      - can also pass info from the url - `localhost:7777/?dog=ziggy`
+      ```javascript
+      res.render('hello', {
+        name: 'wes',
+        dog: req.query.dog
+      })
+      ```
+- PUG basics
+  - no tags! just type `p hello!`
+  - nest elements by indenting one level
+  - `.wrapper` will create automatically assume `<div class="wrapper"></div>`
+  - `img(src="dog.jpg" alt="Dog")` for attributes
+  - if you don't want a tag `<hello></hello>` , but just want to place text, use a pipe
+    - `| hello`
+  - if you pass in locals, you can interpolate the variable with `#{}`
+    - `p.hello Hello my dogs name is #{dog}`
+  - if you want to pass in locals to an attribute, you must use javascript denoted with backticks and ESX template literals `${}`
+    -  ``img.dog(src="dog.jpg" alt=`${Dog}`)``
+  - if you want to define variables
+    - `- const upDog = dog.toUpperCase();`
+  - if you want to use JavaScript
+    - `p.hello Hello my dogs name is #{dog.toUpperCase()}`
+  - emmet works too!
+  - we have a `layout.pug` file that we can "extend" a default layout if we want to create a fresh new page
+    - simply type `extends layout` to import the layout
+  - we also can have different "blocks", which are sections of your website that can be filled in by another template
