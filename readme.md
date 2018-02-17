@@ -62,7 +62,13 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
       - can do a separate admin router too `app.use('/admin' adminRoutes);`
     - handles Middleware as well
       - `app.use(bodyParser.json());` and `app.use(bodyParser.urlencoded({ extended: false }));` takes the data in the request, checks the URL, and puts all of the data so we can easily access it through `request.query` or  `request.body`
-- error "Headers are already sent" - don't send data twice e.g. `res.send` with `res.json`
+- two ways to send data to the browser `res.send` and `res.json`
+  -  watch for error "Headers are already sent" - probably sent data twice e.g. `res.send` with `res.json`
 - data from the url `localhost:7777/?name=wes&age=100` is in the request `req.query.name`
 - putting variables in a route `router.get('/reverse/:name')`
 - obtaining variables in a route `req.params.name`
+
+## Lesson 5 - Templating
+- `res.render` is going to render out a template.
+- PUG is very popular templating language for Node
+  - used to be called Jade
