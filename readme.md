@@ -113,3 +113,15 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
   - we have a `layout.pug` file that we can "extend" a default layout if we want to create a fresh new page
     - simply type `extends layout` to import the layout
   - we also can have different "blocks", which are sections of your website that can be filled in by another template
+
+## Lesson 6 - Template Helpers
+- in `helpers.js`
+  - contains any helper libraries or data that's needed in every single template
+- in `app.js`
+  - we import the data from `helpers.js` by requiring it at the top of the file 
+    - `const helpers = require('./helpers');`
+  - then we add it to our locals
+   - `res.locals.h = helpers`
+  - which we can then reference in PUG
+    - ``title= `${title} | ${h.siteName}` ``
+- any sensitive data should still be stored in  `variables.env` 
