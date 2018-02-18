@@ -80,14 +80,13 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
   - `res.render()` will take two things
     - a name of a template to render out, AKA the View
     - an object whose properties define local variables, AKA locals
-      - 
       ```javascript
       res.render('hello', {
         name: 'wes',
         dog: 'ziggy'
       })
       ```
-      - can also pass info from the url - `localhost:7777/?dog=ziggy`
+    - can also pass info from the url - `localhost:7777/?dog=ziggy`
       ```javascript
       res.render('hello', {
         name: 'wes',
@@ -135,7 +134,6 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
 - each functional part of the application will have its own controller
 - in `storeController.js`
   - we add a homePage method to the global exports variable
-    - 
     ```javascript
     exports.homePage = (res, req) => {
       res.render('index');
@@ -143,7 +141,6 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
     ```
 - in `app.js`
   - we require the storeController at the top, and add the homePage method to the route
-  -
   ```javascript
   const = storeController = require('../controllers/homePage');
   router.get('/', storeController.homePage);
