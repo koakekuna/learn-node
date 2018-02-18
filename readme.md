@@ -124,4 +124,27 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
    - `res.locals.h = helpers`
   - which we can then reference in PUG
     - ``title= `${title} | ${h.siteName}` ``
-- any sensitive data should still be stored in  `variables.env` 
+- any sensitive data should still be stored in  `variables.env`
+
+## Lesson 7 - Controllers and the MVC Pattern
+- MVC Design Pattern - a way to architect and organize your code
+  - Model - manages the data from the database
+  - View - templates in the PUG files
+  - Controller - 'traffic cop' between Model and View; gets the data from the Model and puts it into the template
+- helps in larger applications to avoid messy, hard to test code and increase reusability
+- each functional part of the application will have its own controller
+- in `storeController.js`
+  - we add a homePage method to the global exports variable
+    - 
+    ```javascript
+    exports.homePage = (res, req) => {
+      res.render('index');
+    }
+    ```
+- in `app.js`
+  - we require the storeController at the top, and add the homePage method to the route
+  -
+  ```javascript
+  const = storeController = require('../controllers/homePage');
+  router.get('/', storeController.homePage);
+  ```
