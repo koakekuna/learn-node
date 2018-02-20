@@ -134,14 +134,73 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
 - each functional part of the application will have its own controller
 - in `storeController.js`
   - we add a homePage method to the global exports variable
-    ```javascript
-    exports.homePage = (res, req) => {
-      res.render('index');
-    }
-    ```
+  ```javascript
+  exports.homePage = (res, req) => {
+    res.render('index');
+  }
+  ```
 - in `app.js`
   - we require the storeController at the top, and add the homePage method to the route
   ```javascript
   const = storeController = require('../controllers/homePage');
   router.get('/', storeController.homePage);
   ```
+  ## Lesson 8 - Middleware and Error Handling
+  - middleware allows us to run code after the request but before the response actually happens
+    - e.g. user authentication
+      - a request is made when a user signs in
+      - bodyParser makes the data available on the req object
+      `req.body.email = "  wes@wesBOS.com  ";`
+      - emailNormalize prepares/validates data
+      `req.body.email = req.body.email.trim().toLowerCase();`
+      - authorizeUser looks up user and checks the password
+      `req.user = { name: 'Wes', email: 'wes@wesbos.com'}`
+      `req.user.email; // "wes@wesbos.com"`
+      - valid - displayProfile and render template
+      `res.render('account', { user: req.user })`
+      - invalid - flash error and redirect to login page
+      `res.flash('error', 'Invalid Login');`
+      `res.redirect('/login')`
+- middleware can have a `next();` method which is used to say, "I'm done with this middleware, pass it on to the next function down the line"
+- e.g. myMiddleware completes and continues to homePage
+`router.get('/', storeController.myMiddleware, storeController.homePage);`
+- in `app.js`
+  - anytime we see `app.use` we are using global middleware
+  - so even before we expose any of our routes, we're running all this middleware
+    - we have a public folder filled with static assets, so anytime anyone asks for any of these images, express doesn't even have to think about if it's a route or not
+    `app.use(express.static(path.join(__dirname, 'public')));`
+    - takes the raw request and turns them into usable properties on the `req.body`
+    `app.use(bodyParser.json());`
+    `app.use(bodyParser.urlencoded({ extended: false }))`
+    - populate `req.cookies` with any cookies that came along with the request
+    `app.use(cookieParser());`
+    - sessions all us to store data on visitors from request to request
+    ```javascript
+    app.use(session({
+      secret: process.env.SECRET,
+      key: process.env.KEY,
+      resave: false,
+      saveUninitialized: false,
+      store: new MongoStore({ mongooseConnection: mongoose.connection })
+    }));
+    ```
+  - Passport JS handles our logins
+  ```javascript
+  app.use(passport.initialize());
+  app.use(passport.session());
+  ```
+  - pass variables to our templates and all requests
+  ```javascript
+  app.use((req, res, next) => {
+    res.locals.h = helpers
+    res.locals.flashes = req.flash();
+    res.locals.user = req.user || null;
+    res.locals.currentPath = req.path;
+    next();
+  });
+  ```
+  - then we finally handle our own routes
+  `app.use('/', routes);`
+  - and if that didn't work, 404 them and forward to error handler
+  `app.use(errorHandlers.notFound)`
+- error handlers are safety nets to catch stuff after trying our routes, but before sending the response
