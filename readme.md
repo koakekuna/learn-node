@@ -204,3 +204,52 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
   - and if that didn't work, 404 them and forward to error handler
   `app.use(errorHandlers.notFound)`
 - error handlers are safety nets to catch stuff after trying our routes, but before sending the response
+
+## Lesson 9 - Creating our Store Model
+- models is where are data is going to be stored
+- mongoDB can be a loose database, meaning you do not need to specify what your data will look like ahead of time, but by default it is strict
+- in _new_ file ./models/Store.js
+  - mongoDB is the database and mongoose is the package that we use to interface
+  `const mongoose = require('mongoose');`
+  - we set the mongoose promise to be the global promise to use ES6's async/await
+  `mongoose.Promise = global.Promise;`
+  - we use slugs to turn our urls into url-friendly-names
+  `const slug = require('slugs');`
+  - we create a new schema
+  ```javascript
+  const storeSchema = new mongoose.Schema({
+    // can accept an object with multiple parameters
+    name: {
+      type: String, 
+      // do data normalization as close to the model as possible
+      trim: true,
+      // instead of true, pass a better user error message
+      required: 'Please enter a store Name!'
+    },
+    slug: String,
+    description: {
+      type: String,
+      trim: true
+    },
+    // we'll pass multiple strings in an Array
+    tags: [String]
+  });
+  ```
+  - finally we export the schema with `module.exports` since it's the main thing we're exporting
+  `module.exports = mongoose.model('Store', storeSchema);`
+- in `start.js`
+  - we import all our models
+    - only need to import once and MongoDB will know about the models throughout the entire application
+  `require('./models/Store');`
+- back in `Store.js`
+  - we need to "slugify" our store name before we save, but only if the name has been modified
+  ```javascript
+  storeSchema.pre('save', function(next) {
+    if (!this.isModified('name')) {
+      next(); // skip it
+      return; // stop this function from running
+    }
+    this.slug = slug(this.name);
+    next();
+  })
+  ```
