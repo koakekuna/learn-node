@@ -253,3 +253,6 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
     next();
   })
   ```
+
+  ## Lesson 10 - Saving Stores and Using Mixins
+  
