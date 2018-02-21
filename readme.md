@@ -254,5 +254,45 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
   })
   ```
 
-  ## Lesson 10 - Saving Stores and Using Mixins
-  
+## Lesson 10 - Saving Stores and Using Mixins
+- in `index.js`
+  - create a route for an Add page
+  `router.get('/', store.controller.addStore)`
+- in `storeController.js`
+  - add a new controller
+  ```javascript
+  exports.addStore = (req, res) => {
+    res.render('editStore', { title: 'Add Store', });
+  }
+  ```
+  - name the view 'editStore' instead of 'addStore', since we'll use the same template for both the Edit Store page and Add Store page
+  - pass in a page title 'Add Store'
+- in `editStore.pug`
+  - import the base page layout from `layout.pug`
+  `extends layout`
+  - select the main body section
+  `block content`
+  - `h2= title` and `h2 #{title}` are the same thing
+    - title variable was imported from the controller and is in our locals
+- a PUG mixin is like a function where you pass in some data and it returns some HTML
+- in `_storeForm.pug`
+  - underscore in the file name to keep similar conventions to sass
+  - add a mixin named storeForm
+  `mixin storeForm(store = {})`
+  - for adding a store, the default will be an empty object, but when we need to edit the store, a store name will be passed in
+  - 
+- in `editStore.pug`
+  - import the mixin
+  `include mixins/_storeForm`
+  - use the mixin with a plus sign (+)
+  `+storeForm()`
+- in `editStore.pug`
+  - use a dash (-) to use javascript
+  `- const choices = ['Wifi', 'Open Late', 'Family Friendly', 'Vegetarian', 'Licensed'];`
+  - use for loops
+  `each choice in choices`
+- two form methods "POST" and "GET" 
+  - "POST" sends the data invisibly, useful for passwords
+  - "GET" sends the data through the URL
+
+## Lesson 11 - Using Async Await
