@@ -296,3 +296,66 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
   - "GET" sends the data through the URL
 
 ## Lesson 11 - Using Async Await
+- in `storeController.js`
+  - import mongoose
+  `const mongoose = require('mongoose');`
+  - import the Store schema, which rather than importing the schema directly from the file, we've already imported it once in `start.js`, so we can simply reference it off the mongoose variable (a concept called singleton). We export this specific model 'Store' at the bottom of our `Store.js` file
+  `const Store = mongoose.model('Store');`
+  - create a new store
+  ```javascript
+  exports.createStore = (req, res) => {
+    const store = new Store(req.body);
+  }
+  ```
+  - what if someone posts additional data in the request?
+    - since we're using a strict schema in our model in `models/store.js`, only the defined data will be picked up. Anything else will get thrown away.
+  - save a store, which will fire off a connection to the MongoDB database, save that data, and then come back to us with either the store itself or an error saying what happened
+  `store.save();`
+- 3 ways to deal with asynchronous data
+  - callbacks, which is the old way and has a lot of syntax and can create christmas tree code or callback hell
+  ```javascript
+  store.save(function(err, store) {
+    if(!err) {
+      console.log('It worked!');
+      res.redirect('/');
+    }
+  })
+  ```
+  - promises, which you use `.then()` and `.throw()` and is great because you can chain these things on and on, as long as they return a promise from each of the thens
+  ```javascript
+  store
+    .save()
+    .then(store => {
+      return Store.find()
+    })
+    .then(stores => {
+      res.render('storeList', { stores: stores })
+    })
+    .catch(err => {
+      throw Error(err);
+    })
+  console.log('It worked!');
+  ```
+  - async await, which you directly tell the parent function it will have some awaits, and then it will wait to complete the awaited function before moving on to the next line
+  ```javascript
+  exports.createStore = async (req, rest) => {
+    const store = new Store(req.body);
+    await store.save();
+    console.log('It worked!');
+  }
+  ```
+- in `errorHandlers.js`
+  - in order to avoid `try{} catch(e) {}` with async await in each controller , we use some middleware to wrap the function in
+  - this will catch the error, and call `next()`, which will run the next function in `app.js`
+  ```javascript
+  exports.catchErrors = (fn) => {
+    return function(req, res, next) {
+      return fn(req, res, next).catch(next);
+    }
+  }
+  ```
+- in `index.js`
+  - import the catchErrors handler with ES6 object de-structuring, which will only import that specific method from `errorHandlers.js`
+  `const { catchErrors } = require('../handlers/errorHandlers');`
+  - wrap the controller with the catchErrors
+  `router.post('/', catchErrors(storeController.createStore));`
