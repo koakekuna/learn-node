@@ -359,3 +359,13 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
   `const { catchErrors } = require('../handlers/errorHandlers');`
   - wrap the controller with the catchErrors
   `router.post('/', catchErrors(storeController.createStore));`
+
+## Lesson 12 - Flash Messages
+- flashing a message helps with redirects by displaying additional info such as a success or error message
+- in `app.js`
+  - we import the flash middleware
+  `const flash = require('connect-flash');`
+  - and make the flashes available
+  `app.use(flash());`
+- in `storeController.js`
+  - 
