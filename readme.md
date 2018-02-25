@@ -400,3 +400,81 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
   `exports.dump() = (obj) => JSON.stringify(obj, null, 2);`
 - flashes only work with sessions, as you have to be able to save data from one request to another
   - otherwise the application is stateless
+
+## Lesson 13 - Querying Our Database for Stores
+- need a way to display the stores on the homepage and on the stores page
+- in `storeController.js`
+  - create a getStores controller method
+  ```javascript
+  exports.getStores = (req, res) => {
+    res.render('stores', { title: 'Stores' });
+  }
+  ```
+- in `index.js`
+  - change the controller method for the index to getStores
+  `router.get('/', 'storeController.getStores);`
+  - create a new controller method for the stores page
+  `router.get('/stores', 'storeController.getStores);`
+- create a new view `stores.pug` 
+  - with a standard layout
+  ```pug
+  extends layout
+  block content
+    .inner
+      h2= title
+  ```
+- before we show the stores on the page, we need to query the database for a list of all stores
+  - in `index.js` we'll also need to wrap the controller in catchErrors
+- in `storeController.js` 
+  - we'll async the controller method
+  - query the database with Store.find()
+  - and make the stores available to our view by passing a stores variable
+  ```javascript
+  exports.getStores = async (req, res) => {
+    const stores = await Store.find();
+    res.render('stores', { title: 'Stores', stores: stores })
+  }
+  ```
+- in `stores.pug`
+  - now that we have the stores data made available by the controller, display the store in the template
+  ```pug
+  .stores
+    each store in stores
+  ```
+- create a new mixin called `_storeCard.pug`
+  - the mixin will take in a store
+  ```pug
+  mixin storeCard(store = {})
+    .store
+  ```
+  - it will have a hero with the store's image or default to a generic photo
+  ```pug
+      .store__hero
+        img(src=`/uploads/${store.photo || 'store.png'}`)
+  ```
+  - add a h2 title and a link to the store
+  ```pug
+      h2.title
+        a(href=`/store/${store.slug}`) #{store.name}
+  ```
+  - add a store details section and use only trim the description to 25 words max
+  ```pug
+      .store_details
+        p= store.description.split(' ').slice(0, 25).join(' ')
+  ```
+  - also in the store hero, add in a store actions subsection (eventually will feature like, follow, and remove buttons)
+  ```pug
+  .store__hero
+    .store__actions
+      button soon
+  ```
+- in `stores.pug`
+  - import the mixin at the top
+  ```pug
+  include mixins/_storeCard
+  ```
+  - use the mixin in each store
+  ```pug
+  each store in stores
+    +storeCard(store)
+  ```
