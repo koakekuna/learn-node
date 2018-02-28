@@ -558,3 +558,49 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
     res.redirect(`/store/${store._id}/edit`);
   }
   ```
+
+## Lesson 15 - Saving Lat and Lng for each store
+- in `/models/Store.js`
+  - really important before you start storing data to figure out how your data should be stored
+  - add a created property
+  ```javascript
+  created: {
+    type: Date,
+    default: Date.now
+  }
+  ```
+  - mongoDB has a huge feature set for dealing with stuff that is location based
+  - add a location property
+  ```javascript
+  location: {
+    type: {
+      type: String,
+      default: 'Point'
+    },
+    coordinates: [{
+      type: Number,
+      required: 'You must supply coordinates!'
+    }],
+    address: {
+      type: String,
+      required: 'You must supply an address!'
+    }
+  }
+  ```
+- in `/views/mixins/_storeForm.pug`
+  - use `//-` for pug comments
+  - add a label and input for the address
+    - in `app.js` we have middleware `bodyParser.urlencoded({ extended: true })` that allows us to send nested data without having to do any extra heavy lifting on the client side before we send it, or on the server side as we receive that data. 
+    - to avoid error "Cannot read property 'address' of undefined" when we have a store with no location data, we use parentheses to check for the property first
+  ```pug
+  label(for="address") Address
+  input(type="text" id="address" name="location[address]" value=(store.location && store.location.address))
+  ```
+  - add a label and input for the lng and lat
+    - be sure that lng comes first and lat comes second since that's the way MongoDB expects the data to be stored
+  ```pug
+  label(for="lng") Address Lng
+  input(type="text" id="lng" name="location[coordinates][0]" value=(store.location && store.location[coordinates][0]) required)
+  label(for="lat") Address Lat
+  input(type="text" id="lat" name="location[coordinates][1]" value=(store.location && store.location[coordinates][1]) required)
+  ```
