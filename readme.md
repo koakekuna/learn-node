@@ -602,5 +602,6 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
   label(for="lng") Address Lng
   input(type="text" id="lng" name="location[coordinates][0]" value=(store.location && store.location[coordinates][0]) required)
   label(for="lat") Address Lat
-  input(type="text" id="lat" name="location[coordinates][1]" value=(store.location && store.location[coordinates][1]) required)
+  input(type="text" id="lat" name="location[coordinates][1]" value=(store.location && store.location.coordinates[1]) required)
   ```
+  
