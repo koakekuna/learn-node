@@ -609,4 +609,35 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
 - in `public/javascripts/modules/bling.js`
   - gives us a jQuery type syntax with `$` and we can do stuff like `$('.wrapper').on('click')`
 - create a new file `modules/autocomplete.js`
-  - 
+  - create a new function autocomplete and export it
+    - even though we don't have ES6 syntax on Node, it is available through webpack
+  ```javascript
+  function autocomplete (input, latInput, lngInput) {
+  }
+  export default autocomplete;
+  ```
+- in `public/javascripts/delicious-app.js`
+  - import autocomplete and pass in the selectors for each corresponding field in our form with the Bling syntax
+  ```javascript
+  import './modules/autocomplete'
+  autocomplete( $('#address'), $('#lat'), $('#lng') );
+  ```
+- back in `autocomplete.js`
+  - we'll first check if there's an input, and if not just return the function to skip the function from running
+  - create the dropdown for the address field
+  - listen for a change to the address field, and set the lat and lng field values accordingly
+  - prevent enter key from submitting the form on the address field
+  ```javascript
+  function autocomplete(input, latInput, lngInput) {
+    if (!input) return;
+    const dropdown = new google.maps.places.Autocomplete(input);
+    dropdown.addListener('place_changed', () => {
+      const place = dropdown.getPlace();
+      latInput.value = place.geometry.location.lat();
+      lngInput.value = place.geometry.location.lng();
+    });
+    input.on('keydown', (e) => {
+      if(e.keyCode === 13) e.preventDefault();
+    });
+  }
+  ```
