@@ -604,4 +604,9 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
   label(for="lat") Address Lat
   input(type="text" id="lat" name="location[coordinates][1]" value=(store.location && store.location.coordinates[1]) required)
   ```
-  
+
+## Lesson 16 - Geocoding Data with Google Maps
+- in `public/javascripts/modules/bling.js`
+  - gives us a jQuery type syntax with `$` and we can do stuff like `$('.wrapper').on('click')`
+- create a new file `modules/autocomplete.js`
+  - 
