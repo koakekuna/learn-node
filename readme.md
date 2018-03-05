@@ -641,3 +641,14 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
     });
   }
   ```
+  ## Lesson 17 - Quick Data Visualization Tip 
+  - in MongoDB Compass
+    - you can vizualize the location data in the store schema
+    - but when you update the address, some defaults in the store schema do not kick in
+  - in `storeController.js`
+    - set the location's type to default to a point
+    ```javascript
+    exports.updateStore = async (req, res) => {
+      req.body.location.type = 'Point';
+    }
+    ```
