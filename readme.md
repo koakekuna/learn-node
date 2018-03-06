@@ -652,3 +652,45 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
       req.body.location.type = 'Point';
     }
     ```
+
+## Lesson 18 - Uploading and Resizing Images with Middleware
+- modify store form to allow uploading an image
+- add some middleware to upload the file and resize the file
+- in `_storeForm.pug`
+  - anytime you're uploading files to a server, you need to make sure that the browser will send it as a multipart
+  ```pug
+  form(action=`/add/${store._id || ''}` method="Post" class="card" enctype="multipart/form-data")
+  ```
+- in `storeController.js`
+  - import Multer, which will handle the upload request, and MulterOptions which will specify where the file will be stored, and what types of files are allowed
+  - save the data into memory, since we don't want the original file - only the resized version
+  - filter by mimetype and check to see if it's an image. If yes, then continue on, if no then pass an error message
+    - `next(null, true)` is a sort of callback premise in node. If you call next and you pass it something as a first value, that means it's an error. If you can next and you pass it null and a second value, that means it worked and the second value that you're passing it is the one that gets passed along.
+  ```javascript
+  const multer = require('multer');
+  const multerOptions = {
+    storage: multer.memoryStorage(),
+    fileFilter(req, file, next) {
+      const isPhoto = file.mimetype.startsWith('image/');
+      if(isPhoto) {
+        next(null, true);
+      } else {
+        next({ message: 'That filetype isn\'t allowed!' }, false);
+      }
+    }
+  };
+  ```
+  - create a controller called upload above createStore, which will be an instance of Multer passed with the multerOptions and will handle only a single field called photo
+  ```javascript
+  exports.upload = multer(multerOptions).single('photo');
+  ```
+- in `_storeForm.pug`
+  - let's add the field for the image upload above the address field
+  - set it accept gifs, pngs, and jpegs, so that the user can select only allowed types (but we still have the server side validation in case)
+  - if the store already has a photo, display it with an 200px wide thumbnail
+  ```pug
+  label(for="photo") Photo
+    input(type="file" name="photo" id="photo" accept="image/gif, image/png, image/jpeg")
+    if store.photo
+      img(src=`/uploads/${store.photo}`, alt=store.name width=200)
+  ```
