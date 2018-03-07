@@ -694,3 +694,54 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
     if store.photo
       img(src=`/uploads/${store.photo}`, alt=store.name width=200)
   ```
+- in `storeController.js`
+  - import packages jimp and uuid, which will allow us to resize our photos and create unique identifiers for each image
+  ```javascript
+  const jimp = require('jimp');
+  const uuid = require('uuid');
+  ```
+  - we'll add a resize method that functions as middleware right below our upload method and checks first to see if there is a file to resize
+  ```javascript
+  exports.resize = async (req, res, next) => {
+    // check if there is no new file to resize
+    if( !req.file ) {
+      next(); // skip to the next middleware
+      return;
+    }
+  };
+  ```
+- in `index.js`
+  - add in the storeController methods upload and resize to the route before creating the store
+  ```javascript
+  router.post('/add', 
+    storeController.upload, 
+    catchErrors(storeController.resize),
+    catchErrors(storeController.createStore)
+    );
+  ```
+- in `storeController.js`
+  - in the resize method, generate a unique id with the correct extension and store it in req.body
+  ```javascript
+  const extension = req.file.mimetype.split('/')[1];
+  req.body.photo = ${uuid.v4()}.${extension}
+  ```
+  - read the file into memory, resize it to 800px width and auto height, and save it in the uploads folder. Finally call next to pass it onto the next function.
+  ```javascript
+  const photo = await jimp.read(req.file.buffer);
+  await photo.resize(800, jimp.AUTO);
+  await photo.write(`./public/uploads/${req.body.photo}`);
+  next();
+  ``` 
+- in `models/Store.js`
+  - update the model to include photo
+  ```javascript
+  photo: String
+  ```
+- add the new upload and resize methods to the route for updating each store
+  ```javascript
+  router.post('/add/:id', 
+    storeController.upload, 
+    catchErrors(storeController.resize),
+    catchErrors(storeController.updateStore)
+    );
+  ```
