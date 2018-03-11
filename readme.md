@@ -747,3 +747,5 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
   ```
 
 ## Lesson 19 - Routing and Templating Single Stores
+- find the actual store that has the slug
+- then pull in the name of the store, the photo of the store, the map of the store, the address, the description, a list of tags, and then eventually a log in form to make a comment
