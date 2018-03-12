@@ -1,0 +1,22 @@
+extends layout
+
+block content
+  .inner
+    pre= h.dump(locals.store)
+    h2= store.name
+    img(src=`/uploads/${store.photo}`, alt=`${store.name}`)
+    #map
+    -
+      function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: `${store.location.coordinates[0]}`, lng: `${store.location.coordinates[1]}`},
+          zoom: 8
+        });
+      }
+    p= store.location.address
+    p= store.description
+
+    - const tags = store.tags
+    for tag in tags
+      li= tag
+    

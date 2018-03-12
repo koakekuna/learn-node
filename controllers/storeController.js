@@ -51,6 +51,11 @@ exports.createStore = async (req, res) => {
   res.redirect(`/store/${store.slug}`);
 };
 
+exports.getStore = async (req, res) => {
+  const store = await Store.findOne({ slug: req.params.slug });
+  res.render("store", { title: `${store.slug}`, store });
+}
+
 exports.getStores = async (req, res) => {
   // 1. Query the database for a list of all stores
   const stores = await Store.find();
@@ -76,7 +81,7 @@ exports.updateStore = async (req, res) => {
   }).exec();
   req.flash(
     "success",
-    `Successfully updated <strong>${store.name}</strong>. <a href="/stores/${
+    `Successfully updated <strong>${store.name}</strong>. <a href="/store/${
       store.slug
     }">View Store →</a>`
   );
