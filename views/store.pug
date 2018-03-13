@@ -1,22 +1,21 @@
 extends layout
 
 block content
-  .inner
-    pre= h.dump(locals.store)
-    h2= store.name
-    img(src=`/uploads/${store.photo}`, alt=`${store.name}`)
-    #map
-    -
-      function initMap() {
-        var map = new google.maps.Map(document.getElementById('map'), {
-          center: {lat: `${store.location.coordinates[0]}`, lng: `${store.location.coordinates[1]}`},
-          zoom: 8
-        });
-      }
-    p= store.location.address
+  .single
+    .single__hero
+        img.single__image(src=`/uploads/${store.photo || 'store.png'}`, alt=`${store.name}`)
+        h2.title.title--single
+          a(href=`/stores/${store.slug}`)= store.name
+  .single__details.inner
+    img.single__map(src=h.staticMap(store.location.coordinates))
+    p.single__location= store.location.address
     p= store.description
 
-    - const tags = store.tags
-    for tag in tags
-      li= tag
+    if store.tags
+      ul.tags
+        each tag in store.tags
+          li.tag
+            a.tag__link(href=`/tags/${tag}`)
+              span.tag__text ##{tag}
+    
     

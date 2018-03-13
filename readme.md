@@ -747,5 +747,48 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
   ```
 
 ## Lesson 19 - Routing and Templating Single Stores
-- find the actual store that has the slug
-- then pull in the name of the store, the photo of the store, the map of the store, the address, the description, a list of tags, and then eventually a log in form to make a comment
+- in `index.js`
+  - create a route for a single store using the store slug and connect it to a controller called getStoreBySlug
+  ```javascript
+  router.get('/store/:slug', catchErrors(storeController.getStoreBySlug));
+  ```
+- in `storeController.js`
+  - create a new controller called getStoreBySlug
+  - query the database to find the store based on the slug
+  - if there is no store, then pass it along to error handling
+  - render a template called store and pass in a title and store as params
+  ```javascript
+  exports.getStoreBySlug = async (req, res, next) {
+    const store = await Store.findOne({ slug: req.params.slug });
+    if(!store) {
+      next();
+      return;
+    }
+    res.render("store", { title: store.name, store })
+  }
+  ```
+- create a new view `views/store.pug`
+  - display a hero with the store title and image (default to 'store.png' if no images are set)
+  - display an inner section with a static Google Map, the address, description, and if there are tags, display them
+  - for the map, there is a helper function staticMap found in `helpers.js` that takes in an array with lng and lat values and then converts it into a usable URL for the Maps API. Notice Google Maps expects lng then lat while MongoDB expects lat then lng.
+  ```pug
+  extends layout
+
+  block content
+    .single
+      .single__hero
+        img.single__image(src=`/uploads/${store.photo || 'store.png' }`, alt=`${store.name}`)
+        h2.title.title--single
+          a(href=`/stores/${store.slug}`)= store.name
+    .single__details.inner
+      img.single__map(src=h.staticMap(store.location.coordinates))
+      p.single__location= store.location.address
+      p= store.description
+
+      if store.tags
+        ul.tags
+          each tag in store.tags
+            li.tag
+              a.tag__link(href=`/tags/${tag}`)
+                span.tag__text ##{tag}
+  ```

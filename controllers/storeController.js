@@ -51,9 +51,13 @@ exports.createStore = async (req, res) => {
   res.redirect(`/store/${store.slug}`);
 };
 
-exports.getStore = async (req, res) => {
+exports.getStoreBySlug = async (req, res) => {
   const store = await Store.findOne({ slug: req.params.slug });
-  res.render("store", { title: `${store.slug}`, store });
+  if(!store) {
+    next();
+    return;
+  }
+  res.render("store", { title: store.name, store });
 }
 
 exports.getStores = async (req, res) => {
