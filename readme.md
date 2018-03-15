@@ -792,3 +792,29 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
               a.tag__link(href=`/tags/${tag}`)
                 span.tag__text ##{tag}
   ```
+
+  ## Lesson 20 - Using Pre-Save Hooks to make Unique Slugs
+  - currently there is no check for unique slugs when saving a new store, so you can create a store with the same name, but it will be unreachable since it will redirect to the first store
+  - in `models/Store.js`
+    - async the pre save function
+    - create a regex that will match the slug name OR a slug name-# and store it in a variable `slugRegEx`
+    - search the database for store slugs with the regex and store it in a variable `storesWithSlug`
+      - use `this.constructor` since the Store hasn't been created yet. It will be equal to Store by the time the function runs. 
+    - if there are stores, then increment the slug by one
+
+    ```javascript
+    storeSchema.pre('save', async function(next) {
+      if (!this.isModififed('name')) {
+        next();
+        return;
+      }
+      this.slug = slug(this.name);
+      
+      const slugRegEx = new RegExp(`^(${this.slug}((-[0-9]*$)?)$)`, 'i');
+      const storesWithSlug = await this.constructor.find({ slug: slugRegEx });
+      if(storesWithSlug.length) {
+        this.slug = `${this.slug}-${storesWithSlug.length+1}`;
+      }
+      next();
+    });
+    ```
