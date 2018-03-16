@@ -818,3 +818,77 @@ Hello! This repo is for tracking and documenting the lessons from Wes Bos's Lear
       next();
     });
     ```
+## Lesson 21 - Custom MongoDB Aggregations
+- tags page needs
+  - list of tags and how many stores are in that tag
+  - filter stores based on the tag
+- to get the list of tags, we we don't want to loop through each store and find if it has tags, because that will become slow if we have a lot of stores. Instead let's offload the heavy lifting of querying to the database
+  - use aggregation (kind of like reduce in JavaScript) for complex queries
+- in `index.js`
+  - create a route for the tags page and another route that will have the tag passed as a param. They'll use a store controller method called getStoresByTag.
+  ```javascript
+  router.get('/tags', catchErrors(storeController.getStoresByTag);
+  router.get('/tags/:tag', catchErrors(storeController.getStoresByTag);
+  ```
+- in `storeController.js'
+  - create `getStoresByTag` and query the database for a list of tags using a method called `getTagsList()`. This isn't a default method of Store, we'll actually create this custom method in the store model.
+```javascript
+exports.getStoresByTag = async (req, res) => {
+  const tags = await Store.getTagsList();
+};
+```
+- in `/models/Store.js`
+  - create the static method called `getTagsList` on the store schema
+  - important to use a proper function, not arrow notation, since we'll be using `this` as a proxy for the database
+  - to calculate aggregate values on the database we use the [aggregate function](https://docs.mongodb.com/manual/reference/method/db.collection.aggregate/)
+    - this takes in an array of objects that each function as a [pipeline operator](https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/), meaning each object will modify the data in sequence. Each pipeline operator is prefixed with `$`.
+    - first we'll `$unwind` the database based on `$tags`
+      - the `$unwind` operator will take the tags array in our schema, and return a list of stores that contain any of the tags in the array (should be all of the stores except those that don't have any tags).
+      - the `$` prefix on tags indicates that this is a field in the MongoDB document
+    - then we'll `$group` them based on the `$tags` and we're also going to create a new property called count which will `$sum` all the stores in that tag by just adding 1 to each instance
+    - finally we'll `$sort` the most popular stores first based on the highest count
+  ```javascript
+  storeSchema.statics.getTagsList = function() {
+    return this.aggregate([
+      { $unwind: '$tags' },
+      { $group: { _id: '$tags', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+  };
+  ```
+- in `storeController.js`
+  - render a view called tag and pass in a title called 'Tags' and the tag in the params
+  ```javascript
+  res.render('tag', { title: 'Tags', tags });
+  ```
+- in a newly created `/views/tag.pug`
+  - add a title and for each tag, display the tag name and count
+  ```pug
+  extends layout
+
+  block content
+    .inner
+      h2= title
+      ul.tags
+        each t in tags
+          li.tag
+            a.tag__link(href=`/tags/${t._id}`)
+              span.tag__text= t._id
+              span.tag__count= t.count
+  ```
+- in `storeController.js`
+  - when a tag is selected, we want to rename the title to the tag name, and highlight the selected tag
+  - store the tag in the params in a variable and pass it to our template
+  ```javascript
+  const tag = req.params.tag;
+  res.render('tag', { title: 'Tags', tags, tag })
+  ```
+- in `/views/tag.pug`
+  - if there is a tag selected, make the title the tag name, otherwise default to the title "Tags"
+  ```pug
+  h2 #{tag || title}
+  ```
+  - add a class of `tag__link--active` onto the link if there is a tag selected
+  ```pug
+  a.tag__link(href=`/tags/${t._id}` class=(t._id === tag ? 'tag__link--active' : '' ))
+  ```
