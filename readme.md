@@ -893,13 +893,47 @@ exports.getStoresByTag = async (req, res) => {
   a.tag__link(href=`/tags/${t._id}` class=(t._id === tag ? 'tag__link--active' : '' ))
   ```
 ## Lesson 22 - Multiple Query Promises with Async Await
-- await multiple promises with `Promise.all()`, which takes an array of promises
 - in `storeController.js`
+  - in order to await multiple queries, we need to remove the await on tags and store the promise in a renamed variable called `tagsPromise`
+    - this will ultimately run the query for the store and tags simultaneously, instead of awaiting the tags first and then running stores
+  - query the database to filter all stores based on the tag in the params and store it in a `storesPromise` variable
+  - await multiple promises with `Promise.all()`, which takes an array of promises
+  - deconstruct the result into tags and stores variables with ES6 bracket notation
+  - pass the stores variable a parameter in our views
+    ```javascript
+      exports.getStoresByTag = async (req, res) => {
+      const tag = req.params.tag;
+      const tagsPromise = Store.getTagsList();
+      const storesPromise = Store.find({ tags: tag });
+      const [tags, stores] = await Promise.all([tagsPromise, storesPromise]);
+
+      res.render('tag', { title: 'Tags', tags, tag, stores })
+    };
+    ```
+- in `tag.pug`
+  - add the stores into the view with our storeCard mixin
+  ```pug
+  extends layout
+
+  include mixins/_storeCard
+
+  block content
+    .inner
+      h2 #{tag || title}
+      ul.tags
+        each t in tags
+          li.tag
+            a.tag__link(href=`/tags/${t._id}` class=(t._id === tag ? 'tag__link--active' : '' ))
+              span.tag__text= t._id
+              span.tag__count= t.count
+      .stores
+        each store in stores
+          +storeCard(store)
+  ```
+- in `storeController.js`
+  - while each specific tag page is now rendering stores, the main tag page doesn't display anything, but we want it to display all the stores with tags
+  - create a new variable called `tagQuery` and then if there is a tag in the params then use that otherwise just check if the store has a tag at all. Pass this to the query for `storesPromise`
   ```javascript
-    exports.getStoresByTag = async (req, res) => {
-    const tag = req.params.tag;
-    const tagsPromise = Store.getTagsList();
-    const storesPromise = Store.find({ tags: tag });
-    const result = await Promise.all([tagsPromise, storesPromise]);
-  };
+  const tagQuery = tag || { $exists: true };
+  const storesPromise = Store.find({ tags: tagQuery });
   ```
