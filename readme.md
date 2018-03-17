@@ -892,3 +892,14 @@ exports.getStoresByTag = async (req, res) => {
   ```pug
   a.tag__link(href=`/tags/${t._id}` class=(t._id === tag ? 'tag__link--active' : '' ))
   ```
+## Lesson 22 - Multiple Query Promises with Async Await
+- await multiple promises with `Promise.all()`, which takes an array of promises
+- in `storeController.js`
+  ```javascript
+    exports.getStoresByTag = async (req, res) => {
+    const tag = req.params.tag;
+    const tagsPromise = Store.getTagsList();
+    const storesPromise = Store.find({ tags: tag });
+    const result = await Promise.all([tagsPromise, storesPromise]);
+  };
+  ```
