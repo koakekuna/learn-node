@@ -937,3 +937,25 @@ exports.getStoresByTag = async (req, res) => {
   const tagQuery = tag || { $exists: true };
   const storesPromise = Store.find({ tags: tagQuery });
   ```
+
+## Lesson 23 - Creating User Accounts
+- in `index.js`
+  - create a route for loging in a user with a new controller called `userController` and method `loginForm`
+  ```javascript
+  router.get('/login', userController.loginForm)
+  ```
+- in `/controllers/userController.js`
+  - import Mongoose and connect the login form with a view called 'login' and pass it the same title
+  ```javascript
+  const mongoose = require('mongoose');
+
+  exports.loginForm = (req, res) => {
+    res.render('/login', { title: 'Login' })
+  };
+  ```
+in `index.js`
+  - import the new controller
+  ```javascript
+  const storeController = require('../controllers/userController');
+  ```
+
