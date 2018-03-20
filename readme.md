@@ -958,4 +958,3 @@ in `index.js`
   ```javascript
   const storeController = require('../controllers/userController');
   ```
-
