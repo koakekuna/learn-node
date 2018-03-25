@@ -944,7 +944,7 @@ exports.getStoresByTag = async (req, res) => {
   ```javascript
   router.get('/login', userController.loginForm)
   ```
-- in `/controllers/userController.js`
+- create a new controller `/controllers/userController.js`
   - import Mongoose and connect the login form with a view called 'login' and pass it the same title
   ```javascript
   const mongoose = require('mongoose');
@@ -953,8 +953,61 @@ exports.getStoresByTag = async (req, res) => {
     res.render('/login', { title: 'Login' })
   };
   ```
-in `index.js`
+- in `index.js`
   - import the new controller
   ```javascript
   const storeController = require('../controllers/userController');
   ```
+- create a new view `/views/login.pug`
+  - add the standard layout
+  ```pug
+  extends layout
+
+  block content
+    .inner
+  ```
+- create a new mixin `/views/mixins/_loginForm.pug`
+  - create a basic login form with email, password, and login button
+  ```pug
+  mixin loginForm()
+    form.form(action="/login" method="POST")
+      h2 Login
+        label(for="email")
+        input(type="email" name="email")
+        input(type="password" name="password")
+        input.button(type="submit" value="Log In")
+  ```
+- create a new model for users `/models/User.js` to store the login data
+  - import Mongoose, the schema, and set ES6 promises
+  ```javascript
+  const mongoose require('mongoose');
+  const Schema = mongoose.Schema;
+  mongoose.Promise = global.Promise;
+  ```
+  - import md5, validator, mongodbErrorhandler, and passportLocalMongoose packages
+  ```javascript
+  const md5 = require('md5');
+  const validator = require('validator');
+  const mongodbErrorHandler = require('mongoose-mongodb-errors');
+  const passportLocalMongoose = require('password-local-mongoose');
+  ```
+  - make the model's schema including email and name and export it
+  ```javascript
+  const userSchema = new Schema({
+    email: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      trim: true
+      validate: [validator.isEmail, 'Invalid Email Address'],
+      required: 'Please supply an email address'
+    },
+    name: {
+      type: String,
+      required: 'Please suppoy a name',
+      trim: true
+    }
+  });
+  module.exports = mongoose.model('User', userSchema);
+  ```
+- Passport.js takes away a lot of the heavy lifting that comes along with managing sessions or creating tokens or logging people in, logging people out.
