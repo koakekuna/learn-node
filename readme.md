@@ -1010,4 +1010,41 @@ exports.getStoresByTag = async (req, res) => {
   });
   module.exports = mongoose.model('User', userSchema);
   ```
-- Passport.js takes away a lot of the heavy lifting that comes along with managing sessions or creating tokens or logging people in, logging people out.
+  - add passport and mongodbErrorHandlers
+    - Passport.js takes away a lot of the heavy lifting that comes along with managing sessions or creating tokens or logging people in, logging people out.
+    - the error handler gives us nice error messages
+  ```javascript
+  userSchema.plugin(passportLocalMongoose, { usernameField: 'email' });
+  userSchema.plugin(mongodbErrorHandler);
+  ```
+- in `index.js`
+  - set up a route for registering a user
+  ```javascript
+  router.get('/register', userController.registerForm);
+  ```
+- in `userController.js`
+  - set up the registerForm method
+  ```javascript
+  exports.registerForm = (req, res) => {
+    res.render('register', { title: 'Register' });
+  };
+  ```
+- in a newly created `views/register.pug`
+  - create the register form
+  ```pug
+  extends layout
+
+  block content
+    .inner
+      form.form(action="/register" method="POST")
+        h2 Register
+        label(for="name") Name
+        input(type="text" name="name" required)
+        label(for="email") Email
+        input(type="email" name="email" required)
+        label(for="password") Password
+        input(type="password" name="password")
+        label(for="password-confirm") Confirm Password
+        input(type="password-confirm" name="password-confirm")
+        input.button(type="sumbit" value="Register")
+  ```
