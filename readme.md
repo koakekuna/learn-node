@@ -1045,6 +1045,45 @@ exports.getStoresByTag = async (req, res) => {
         label(for="password") Password
         input(type="password" name="password")
         label(for="password-confirm") Confirm Password
-        input(type="password-confirm" name="password-confirm")
+        input(type="password" name="password-confirm")
         input.button(type="sumbit" value="Register")
+  ```
+- in `userController.js`
+  - create a validateRegister middleware to validate the registration data
+    - the sanitizeBody helper method comes from `app.js` from the expressValidator package. It will help normalize all the different variations of emails (e.g. w.e.s.bos@gmail.com or wesbos+test@gmail.com).
+    - check the body to see if they supplied a name, email, and password and make sure it's not empty
+    - these probably won't ever trip, but just in case someone has an old browser or maliciously turns off the html5 validators
+    - check to make sure the confirm password field matches the password
+    - store the validation errors in a variable called errors
+      - if there are errors, flash the errors with the error messages
+      - then render the page, make sure the body fields have the body data, and make sure you pass the flash
+      - return to stop the function
+      - if there aren't errors, then just use `next()`
+  ```javascript
+  exports.validateRegister = (req, res, next) => {
+    req.sanitizeBody('name');
+    req.checkBody('name', 'You must supply a name!').notEmpty();
+    req.checkBody('email', 'That Email is not valid!').notEmpty();
+    req.sanitizeBody('email').normalizeEmail({
+      remove_dots: false,
+      remove_extension: false,
+      gmail_remove_subaddress: false
+    });
+    req.checkBody('password', 'Password Cannot be Blank!').notEmpty();
+    req.checkBody('password-confirm', 'Confirmed Password cannot be blank!').notEmpty();
+    req.checkBody('password-confirm', 'Oops! Your passwords do not match').equals(req.body.password);
+
+    const errors = req.validationErrors();
+    if (error) {
+      req.flash('error', errors.map(err => err.msg));
+      res.render('register', { title: 'Register', body: req.body, flashes: req.flash() });
+      return;
+    }
+    next();
+  };
+  ```
+- in `index.js`
+  - finally set the route for posting the register form
+  ```javascript
+  router.post('/register', userController.validateRegister);
   ```
