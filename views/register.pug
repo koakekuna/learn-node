@@ -2,15 +2,14 @@ extends layout
 
 block content
   .inner
-  pre= h.dump(locals)
     form.form(action="/register" method="POST")
       h2 Register
       label(for="name") Name
-      input(type="text" name="name" value=(body.name || ''))
+      input(type="text" name="name" value=(body ? body.name : ''))
       label(for="email") Email
-      input(type="email" name="email" value=(body.email || ''))
+      input(type="email" name="email" value=(body ? body.email : ''))
       label(for="password") Password
-      input(type="password" name="password" value=(body.password || ''))
+      input(type="password" name="password" value=(body ? body.password : ''))
       label(for="password-confirm") Confirm Password
-      input(type="password" name="password-confirm" value=(body.password-confirm || ''))
+      input(type="password" name="password-confirm" value=(body ? body.password-confirm : ''))
       input.button(type="submit" value="Register")

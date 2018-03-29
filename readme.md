@@ -989,7 +989,7 @@ exports.getStoresByTag = async (req, res) => {
   const md5 = require('md5');
   const validator = require('validator');
   const mongodbErrorHandler = require('mongoose-mongodb-errors');
-  const passportLocalMongoose = require('password-local-mongoose');
+  const passportLocalMongoose = require('passport-local-mongoose');
   ```
   - make the model's schema including email and name and export it
   ```javascript
@@ -1086,4 +1086,78 @@ exports.getStoresByTag = async (req, res) => {
   - finally set the route for posting the register form
   ```javascript
   router.post('/register', userController.validateRegister);
+  ```
+
+## Lesson 24 - Saving Registered Users to the Database
+- in `index.js`
+  - add a new middleware to the post route for registering
+  ```javascript
+  router.post('/register', 
+  userController.validateRegister
+  userControoler.register);
+  ```
+- in `start.js`
+  - import our User model into our application
+  ```javascript
+  require('./models/User');
+  ```
+- in `userController.js`
+  - import the User into our controller as well as a library called Promisify
+
+  - create a new method on exports called register
+  - create a new user by passing in email and name properties whose values come from the body of our form
+  - register the user by using the `register()` method, which comes from the passport local mongoose package in our Users model
+    - problem is it doesn't return a promise, it's callback based, so we'll take it and use promisify
+  ```javascript
+  const User = mongoose.model('User');
+  const promisify = require('es6-promisify');
+
+  exports.register = async (req, res, next) => {
+    const user = new User({ email: req.body.email, name: req.body.name });
+    const register = promisify(User.register, User);
+    await register(user, req.body.password);
+    next();
+  };
+  ```
+- in a new controller `/controllers/authController.js`
+  - import passport
+  - instead of using the typical req, res for middleware, we'll be using some of the stuff provided by passport
+  - we use the authenticate method, and pass in a "strategy", in this case we'll be using a local strategy, and pass in a config object that specifies where to redirect and what to flash in case of success or failure
+  ```javascript
+  const passport = require('passport');
+
+  exports.login = passport.authenticate('local', {
+    failureRedirect: '/login',
+    failureFlash: 'Failed Login!',
+    successRedirect: '/',
+    succesFlash: 'You are now logged in!'
+  });
+  ```
+- in `index.js`
+  - import the auth controller and use the middleware in the route
+  ```javascript
+  const authController = require('../controllers/authController');
+  router.post('/register', 
+  userController.validateRegister,
+  userController.register,
+  authController.login);
+  ```
+- in a newly created file `/handlers/passport.js`
+  - we need to specify the strategy for passport.js
+  - import passport, mongoose, and our User
+  - what's going to happen is we're going to log in to passport and it's going to ask what information would you like on each request? In our case, we just want to pass along the User object
+  ```javascript
+  const passport = require('passport');
+  const mongoose = require('mongoose');
+  const User = mongoose.model('User');
+
+  passport.use(User.createStrategy());
+
+  passport.serializeUser(User.serializeUser());
+  passport.deserializeUser(User.deserializeUser());
+  ```
+- in `app.js`
+  - require our new handler
+  ```javascript
+  require('./handlers/passport');
   ```
