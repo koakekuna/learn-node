@@ -1161,3 +1161,54 @@ exports.getStoresByTag = async (req, res) => {
   ```javascript
   require('./handlers/passport');
   ```
+
+## Lesson 25 - Virtual Fields, Login Logout middleware, and Protecting Routes
+- in `authController.js`
+  - create a middleware method to logout that will log them out, flash them a message, and then redirect them to home
+  ```javascript
+  exports.logout = (req, res) => {
+    req.logout();
+    res.flash('success', 'You are now logged out!');
+    res.redirect('/');
+  }
+  ```
+- in `index.js`
+  - create a route to handle logging out
+  ```javascript
+  router.get('/logout', authController.logout);
+  ```
+  - we have a route for the login page, but nothing for submitting the form. So we'll use the same method that we used for registering
+  ```javascript
+  router.post('/login', authController.login);
+  ```
+- a virtual field in mongoose is essentially something that can be generated. For example if you have someone's weight in pounds, but wanted to convert to kilograms, that data could be generated.
+- in `User.js`
+  - add a virtual field for the gravatar
+  - gravatars use a hash of the email, so we'll be using the md5 package we imported to create a hash of the users email
+  - we use a proper function so we can reference `this`
+  - we return a link containing the hash and specifying a size of 200px
+  ```javascript
+  userSchema.virtual('gravatar').get(function() {
+    const hash = md5(this.email);
+    return `https://gravatar.com/avatar/${hash}?s=200`
+  });
+  ```
+- in `authController.js`
+  - the user shouldn't be able to add stores if their logged in, so we'll make a middleware to make sure their logged in
+  - we'll first check if their logged in with the passport method `isAuthenticated()`, which if they are, then just pass next
+  - if not, then we'll flash them an error message, and redirect them to the login page
+  ```javascript
+  exports.isLoggedIn = (req, res, next) => {
+    if(req.isAuthenticated()) {
+      next();
+      return;
+    }
+    req.flash('error', 'Oops you must be logged in to do that!');
+    res.redirect('/login');
+  }
+  ```
+- in `index.js`
+  - add the `isLoggedIn` middleware to the add route
+  ```javascript
+  router.get('/add', authController.isLoggedin, storeController.addStore);
+  ```
