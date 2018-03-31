@@ -18,6 +18,6 @@ exports.isLoggedIn = (req, res, next ) => {
     next();
     return;
   }
-  req.flash('error', 'Oops you must be logged in to do that!');
+  req.flash('error', 'Oops you fucked up!');
   res.redirect('/login');
 }

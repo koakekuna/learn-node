@@ -1212,3 +1212,60 @@ exports.getStoresByTag = async (req, res) => {
   ```javascript
   router.get('/add', authController.isLoggedin, storeController.addStore);
   ```
+
+## Lesson 26 - Created a User Accout Edit Screen
+- in `index.js`
+  - create a route for our user accout page and make sure their signed in first
+  ```javascript
+  router.get('/account', authController.isLoggedIn, userController.account);
+  ```
+- in `userController.js`
+  - create a method for displaying an edit account
+  ```javascript
+  exports.account = (req, res) => {
+    res.render('account', { title: 'Edit Your Account' });
+  };
+  ```
+- in a newly created `views/account.pug`
+  - create the edit account template complete with an h2 title and form with 
+  ```pug
+  extends layout
+
+  block content
+    .inner
+      h2= title
+      form(action="/account" method="POST")
+        label(for="name") Name
+        input(type="text" name="name" value=user.name)
+        label(for="email") Email
+        input(type="email" name="email" value=user.email)
+  ```
+- in `index.js`
+  - create a route for posting to the account page that will use an update account method that we'll create. It will also use async await so we can wrap it in a catchErrors as well.
+  ```javascript
+  router.post('/account', catchErrors(userController.updateAccount));
+  ```
+- in `userController.js`
+  - create the updateAccount method
+  - stash the data in the body fields in a variable called updates
+  - stash the user by awaiting and querying the database using findOneAndUpdate, which will take three parameters
+    - the query, which we'll find the user through their user id
+    - the updates, which we'll use $set, and that will replace the values of the field 
+    - the options, where we'll specify new to return the new user, runValidators which will run all our validators, and context, which is required by mongoose to run the query properly
+    - finally we'll flash them a success message and redirect them to 'back', which will just return them to the page they were previously
+  ```javascript
+  exports.updateAccount = async (req, res) => {
+    const updates = {
+      name: req.body.name,
+      email: req.body.email
+    }
+
+    const user = await User.findOneAndUpdate(
+      { _id: req.user._id }
+      { $set: updates },
+      { new: true, runValidators: true, context: 'query' }
+    );
+    req.flash('success', 'Updated the profile!');
+    res.redirect('back');
+  };
+  ```
