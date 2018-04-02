@@ -1269,3 +1269,71 @@ exports.getStoresByTag = async (req, res) => {
     res.redirect('back');
   };
   ```
+
+## Lesson 27 - Password Reset Flow
+- we need to create a forgot password part of our login form
+- in a newly created mixin `/views/mixins/_forgot.pug`
+  - create the form with a title and label and input for email
+  ```pug
+  mixin forgotForm()
+    form.form(action="/account/forgot" method="POST")
+      h2 I forgot my password!
+      label(for="email") Email
+      input(type="email" name="email")
+      input.button(type="submit" value="Send a Reset")
+  ```
+- in `login.pug`
+  - add our new forgot form below the login form
+  ```pug
+  extends layout
+
+  include mixins/_loginForm
+  include mixins/_forgot
+
+  block content
+    .inner
+      +loginForm()
+      +forgotForm()
+  ```
+- in `index.js`
+  - add a route to handle the password reset
+  ```javascript
+  router.post('/account/forgot', catchErrors(authController.forgot));
+  ```
+- in `authController.js`
+  - add a new method called forgot
+  - first we check if the user has an email address on file. If not, then we flash them an error. Sometimes it's a good idea not to let the user know if they have an account based on their email address (just in case someone is trying to be malicious), so you can use a generic message that just says a password reset has been set to that account.
+  - Then we set the reset tokens and expiry on their account
+    - there's a module built into Node to generate cryptographically secure random strings, so we'll require "crypto" at the top
+    - we'll use method on crypto called randomBytes to generate a hex string, and we'll also set a password expire date by adding an hour to the current time
+    - we also need to require mongoose and our model
+    - in `User.js` we need to add fields to our users for the token and expiry
+    ```javascript
+    resetPasswordToken: String,
+    resetPasswordExpires: Date
+    ```
+    - then we'll just `await user.save();`
+  - then we will send them an email with the token (but for now since we dont' have email set up, we'll just flash them a link)
+  - finally we redirect them to the login page
+  ```javascript
+  const crypto = require('crypto');
+  const mongoose = require('mongoose');
+  const User = mongoose.model('User');
+
+  exports.forgot = async (req, res) => {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      req.flash('error', 'A password reset has been mailed to this email');
+      return res.redirect('/login');
+    }
+
+    user.resetPasswordToken = crypto.randomBytes(20).toString('hex');
+    user.resetPasswordExpires = Date.now() + 360000;
+    await user.save();
+
+    const resetURL = `http://${req.headers.host}/account/reset/${user.resetPasswordToken}`;
+    req.flash('success', `You have been emailed a password reset link. ${resetURL}`);
+
+    res.redirect('/login');
+  };
+  ```
