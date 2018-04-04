@@ -40,3 +40,7 @@ exports.forgot = async (req, res) => {
   req.flash('success', `You have been emailed a password reset link ${resetURL}`);
   res.redirect('/login');
 };
+
+exports.reset = async (req, res) => {
+
+};
