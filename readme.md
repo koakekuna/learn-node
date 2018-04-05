@@ -1337,3 +1337,102 @@ exports.getStoresByTag = async (req, res) => {
     res.redirect('/login');
   };
   ```
+- in `index.js`
+  - create a route for a reset token
+  ```javascript
+  router.get('/account/reset/:token', catchErrors(authController.reset));
+  ```
+- in `authController.js`
+  - create the method on our controller to handle the reset
+  - find the user based on their reset token and make sure the token hasn't expired
+    - we can do a cool query using `$gt` to check if the current time is greater than the expiration date
+  - if the query fails, then flash an error and redirect them to the login page
+  - otherwise render a reset page
+  ```javascript
+  exports.reset = async (req, res) => {
+    const user = await User.findOne({ 
+      resetPasswordToken: req.params.token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+    if (!user) {
+      req.flash('error', 'Password reset is invalid or has expired');
+      return res.redirect('/login');
+    }
+    res.render('reset', { title: 'Reset your Password' });
+  };
+  ```
+- in a new `views/reset.pug`
+  - create a reset password form
+  ```pug
+  extends layout
+
+  block content
+    .inner
+      form.form(method="POST")
+      h2= title
+      label(for="password") Password
+      input(type="password" name="password")
+      label(for="password-confirm") Password Confirm
+      input(type="password" name="password-confirm")
+      input.button(type="submit" value="Reset Password")
+  ```
+- in `index.js`
+  - create a route for posting the reset form
+  - we'll need to create some middleware to confirm and validate the password, and then finally we'll update the account's password
+  ```javascript
+  router.post('/account/reset/:token', 
+  authController.confirmedPasswords, 
+  catchErrors(authController.update
+  ));
+  ```
+- in `authController.js`
+  - create a new method to confirm the password and password-confirm are the same
+  - access a property with a dash by using quotes and brackets
+  - if it matches, then pass next
+  - if not, flash them an error and redirect them back
+  ```javascript
+  exports.confirmPasswords = (req, res) => {
+    if (req.body.password === req.body['password-confirm']) {
+      next();
+      return;
+    }
+    req.flash('error', 'Passwords do not match!');
+    res.redirect('back');
+  };
+  ```
+  - create a new method to update the password
+  - we want to find the user and use the same query to check the token and expiry, since they could have arrived on the page, but just left it open
+  - then we want to update the password
+    - setPassword() is given to us from the plugin passport-local-mongoose that we imported in our model `Users.js`
+    - but it uses callbacks and not promises, so we'll use promisify and use that method and bind it on the user
+    - remember to import promisify at the top of the document
+  - then we'll await the promise and pass in the new password in the body
+  - next we'll clear the reset token and expiries by setting them to undefined
+  - now we actually want to save the user using `save()` from passport and store that promise in an updatedUser variable
+  - then we'll await that promise and login using `login()`, also from passport
+  - finally we'll flash them a success message and redirect them home
+  ```javascript
+  const promisify = require('es6-promisify');
+
+  exports.update = async (req, res) => {
+    const user = User.findOne({
+      resetPasswordToken: req.params.token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      req.flash('error', 'Password reset is invalid or has expired');
+      return res.redirect('/login');
+    }
+
+    const setPassword = promisify(user.setPassword, user);
+    await setPassword(req.body.password);
+
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    const updatedUser = await user.save();
+    await req.login(updatedUser);
+    req.flash('Success', 'Nice! Your password has been reset! You are now logged in!');
+    res.redirect('/');
+  }
+  ```
