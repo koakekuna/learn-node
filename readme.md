@@ -1436,3 +1436,45 @@ exports.getStoresByTag = async (req, res) => {
     res.redirect('/');
   }
   ```
+
+## Lesson 28 - Sending Email With Node.js
+- use [Mailtrap](https://mailtrap.io) to fake a mail server. So instead of actually sending email to your users, it will just store it in Mailtrap, where you'll be able to quickly see who the emails are being sent to, what they look like, when they've been sent.
+- in `variables.env`
+  - change the username and password to the mailtrap credentials listed for SMTP
+- in a new `handlers/mail.js` file
+  - import nodemailer, pug, juice, htmlToText, and promisify packages
+  ```javascript
+  const nodemailer = require('nodemailer');
+  const pug = require('pug');
+  const juice = require('juice');
+  const htmlToText = require('html-to-text');
+  const promisify = require('es6-promisify');
+  ```
+  - we have nodemailer and we need to create what's called a transport, which is just different ways of sending email, SMTP being the most common. we'll use the `createTransport(`) method provided by nodemailer and pass in a config object which contains fields for host, port, and auth
+  ```javascript
+  const transport = nodemailer.createTransport({
+    host: process.env.MAIL_HOST,
+    port: process.env.MAIL_PORT,
+    auth: {
+      user: process.env.MAIL_USER,
+      pass: process.env.MAIL_PASS
+    }
+  });
+  ```
+  - when someone asks for a password reset, we're going to make a method called send, which will be asynchronous and take in some options.
+  - then we'll create a mailOptions object with from, to, subject, html, and text fields
+  - next we'll use promisify for the `sendMail()` method on transport, and bind it to transport
+  - finally we'll return the sendMail variable using the mailOptions
+  ```javascript
+  exports.send = async (options) => {
+    const mailOptions = {
+      from: `Koa Kekuna <kekoaponolani@gmail.com>`
+      to: options.user.email
+      html: 'This will be filled in later'
+      text: 'This will also be filled in later'
+    }
+    const sendMail = promisify(transport.sendMail, transport);
+    return sendMail(mailOptions);
+  };
+  ```
+- in `authController.js`
