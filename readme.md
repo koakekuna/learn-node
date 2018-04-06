@@ -1461,8 +1461,11 @@ exports.getStoresByTag = async (req, res) => {
     }
   });
   ```
-  - when someone asks for a password reset, we're going to make a method called send, which will be asynchronous and take in some options.
-  - then we'll create a mailOptions object with from, to, subject, html, and text fields
+  - when someone asks for a password reset, we're going to make a method called send, which will be asynchronous and take in some options (which will be passed in from the forgot method in the authController).
+  - then we'll create a mailOptions object with fields for from, to, subject, html, and text fields
+    - 'from' is whatever email you'd like to send it from
+    - 'to' will be the email from the user passed in through options
+    - html and text will be filled out later
   - next we'll use promisify for the `sendMail()` method on transport, and bind it to transport
   - finally we'll return the sendMail variable using the mailOptions
   ```javascript
@@ -1478,3 +1481,51 @@ exports.getStoresByTag = async (req, res) => {
   };
   ```
 - in `authController.js`
+  - import the mail library
+  ```javascript
+  const mail = require('../handlers/mail');
+  ```
+  - then in the forgot method, use the send method from mail right after we generate the resetURL and before we flash them a success message and redirect them to the login page
+  - we'll pass in those options now with a config object which will include the user, subject, resetURL, and filename
+    - the filename will be used when we try to render out the HTML and look for a document called password-reset.pug
+  ```javascript
+    await mail.send({
+    user,
+    subject: 'Password Reset',
+    resetURL,
+    filename: 'password-reset'
+    })
+  ```
+- in `mail.js`
+  - we'll take care of the text and html values in our mailOptions variable by using the packages we imported
+  - first we'll create a function called generateHTML and that will take in two things, the filename and options (which will default to an empty object)
+    - we don't use `exports.generateHTML` because this function not needed anywhere else outside the file, so we just use a regular `const`
+  - then we create a variable called html, and we use the pug library to use the `renderFile()`, which will take name of the file we're looking for
+    - whenever you pass a function reference to something on your disk, you don't actually know where you are in the folder system, because of course we're in a handlers folder. But this renderFile folder, it's in a totally different folder. And it gets a little bit mixed up. So what we can use is a special variable `__dirname`, which is available to us in any file.
+  - next we need to inline our CSS into our html by using the juice library;
+  ```javascript
+  const generateHTML = (filename, options = {}) => {
+    const html = pug.renderFile(`${__dirname}/../views/email/${filename}.pug`, options);
+    const inlined = juice(html);
+    return inlined;
+  };
+  ```
+  - then in our send method we create html and text variables
+  - html will be generated using our generateHTML method
+  - text will be genereated by the htmlToText library
+  ```javascript
+  exports.send = async (options) {
+    const html = generateHTML(options.filename, options);
+    const text = htmlToText.fromString(html);
+    
+    const mailOptions = {
+      to: `Koa Kekuna <kekoaponolani@gmail.com>`,
+      from: options.user.mail,
+      subject: options.subject,
+      html,
+      text
+    }
+    const sendMail = promisifiy(transport.sendMail, transport);
+    return sendMail(mailOptions);
+  }
+  ```
