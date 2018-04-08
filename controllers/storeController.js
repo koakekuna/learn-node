@@ -43,6 +43,7 @@ exports.resize = async (req, res, next) => {
 };
 
 exports.createStore = async (req, res) => {
+  req.body.author = req.user._id;
   const store = await new Store(req.body).save();
   req.flash(
     "success",

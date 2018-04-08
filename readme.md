@@ -1529,3 +1529,44 @@ exports.getStoresByTag = async (req, res) => {
     return sendMail(mailOptions);
   }
   ```
+
+## Lesson 29 - Locking down our application with User Permissions
+- we want to be able to set an author property on our stores that is linked to one of the users in our database
+- in `Store.js`
+  - add a new author field to the schema. the type is going to be an Object Id, which is the unique id given to each user. ref is how we reference the desired model. finally we'll make it required and have an error message.
+  ```javascript
+  author: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: 'You must supply an author'
+  }
+  ```
+- in `storeController.js`
+  - in our createStore method, we're going to set the author on the `req.body` to be the id from the user that is creating the store.
+  ```javascript
+  exports.createStore = async (req, res) => {
+    req.body.author = req.user._id;
+    const store = await (new Store(req.body)).save();
+    req.flash('success', `Successfully created ${store.name}. Care to leave a review?`);
+    res.redirect(`/store/${store.slug}`);
+  };
+  ```
+  - in our getStoreBySlug method, we'll use the `.populate()` method to have the database return not only the user's user_id, but all fields for the user
+  ```javascript
+  exports.getStoreBySlug = async (req, res, next) => {
+    const store = await Store.findOne({ slug: req.params.slug }).populate('author');
+  };
+  ```
+  - in our editStore method, we need to stop users from editing stores that they did not create. Kake a helper function called confirmOwner that will take in a store and user, and if the store's author does not equal the stores user, throw an error
+  ```javascript
+  const confirmOwner = (store, user) => {
+    if (!store.author.equals(user._id)) {
+      throw Error('You must own a store in order to edit it!');
+    }
+  }
+  exports.editStore = async(req, res) => {
+    const store = await Store.findOne({ _id: req.params.id });
+    confirmOwner(store, req.user);
+    res.render('editStore', { title: `Edit ${store.name}`, store });
+  };
+  ```
