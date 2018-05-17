@@ -1558,6 +1558,7 @@ exports.getStoresByTag = async (req, res) => {
   };
   ```
   - in our editStore method, we need to stop users from editing stores that they did not create. Kake a helper function called confirmOwner that will take in a store and user, and if the store's author does not equal the stores user, throw an error
+    - `.equals()` is a method to compare Object Id's
   ```javascript
   const confirmOwner = (store, user) => {
     if (!store.author.equals(user._id)) {
@@ -1570,3 +1571,17 @@ exports.getStoresByTag = async (req, res) => {
     res.render('editStore', { title: `Edit ${store.name}`, store });
   };
   ```
+- in `_storeCard.pug`
+  - we need to selectively show the pencil edit icon for the store based on if the user can edit them or not
+  - since there may be people not logged in, and therefore no user, an error will be thrown, so we must check if there is a user first
+  ```pug
+  .store__actions
+    if user && store.author.equals(user._id)
+      .store__action.store__action--edit
+        a(href=`/stores/${store._id}/edit`)
+          != h.icon('pencil')
+  ```
+## Lesson 30 - Loading Sample Data
+- in `package.json`
+  - we have a script called "sample", which will run `./data/load-sample-data.js`
+  - we also have script called "blowitallaway", which will delete all data
