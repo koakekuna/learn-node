@@ -1585,3 +1585,7 @@ exports.getStoresByTag = async (req, res) => {
 - in `package.json`
   - we have a script called "sample", which will run `./data/load-sample-data.js`
   - we also have script called "blowitallaway", which will delete all data
+- in `load-sample-data.json`
+  - not actually part of our application, so have to manually import parts
+  - it will read the dummy data (e.g. stores.json), store it, and then create objects
+  - comment out the Reviews parts, since we don't have that functionality yet
