@@ -8,7 +8,7 @@ mongoose.Promise = global.Promise; // Tell Mongoose to use ES6 promises
 // import all of our models - they need to be imported only once
 const Store = require('../models/Store');
 // const Review = require('../models/Review');
-const User = require('../models/User');
+const User = require('../models/Users');
 
 
 const stores = JSON.parse(fs.readFileSync(__dirname + '/stores.json', 'utf-8'));

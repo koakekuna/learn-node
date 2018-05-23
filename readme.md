@@ -1589,3 +1589,6 @@ exports.getStoresByTag = async (req, res) => {
   - not actually part of our application, so have to manually import parts
   - it will read the dummy data (e.g. stores.json), store it, and then create objects
   - comment out the Reviews parts, since we don't have that functionality yet
+- in the terminal
+  - run `npm run sample` to generate the sample data - 16 stores with 3 authors (and eventually 41 reviews)
+- look in the Readme for the email and passwords of the authors
