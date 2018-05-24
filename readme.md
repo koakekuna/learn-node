@@ -1592,3 +1592,6 @@ exports.getStoresByTag = async (req, res) => {
 - in the terminal
   - run `npm run sample` to generate the sample data - 16 stores with 3 authors (and eventually 41 reviews)
 - look in the Readme for the email and passwords of the authors
+
+## Lesson 31 - JSON endpoints and creating MongoDB Indexes
+- indexes support efficient execution of queries. MongoDB will pre scan the contents, making it much faster at completing queries.
