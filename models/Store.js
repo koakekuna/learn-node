@@ -42,7 +42,12 @@ const storeSchema = new mongoose.Schema({
   }
 });
 
-storeSchema.pre("save", async function(next) {
+storeSchema.index({
+  name: 'text',
+  description: 'text'
+});
+
+storeSchema.pre("save", async function (next) {
   if (!this.isModified("name")) {
     next(); // skip it
     return; // stop this function from running
@@ -59,7 +64,7 @@ storeSchema.pre("save", async function(next) {
   // TODO make more resiliant so slugs are unique
 });
 
-storeSchema.statics.getTagsList = function() {
+storeSchema.statics.getTagsList = function () {
   return this.aggregate([
     { $unwind: "$tags" },
     { $group: { _id: '$tags', count: { $sum: 1 } } },

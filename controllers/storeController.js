@@ -54,7 +54,7 @@ exports.createStore = async (req, res) => {
 
 exports.getStoreBySlug = async (req, res) => {
   const store = await Store.findOne({ slug: req.params.slug });
-  if(!store) {
+  if (!store) {
     next();
     return;
   }
@@ -87,7 +87,7 @@ exports.updateStore = async (req, res) => {
   req.flash(
     "success",
     `Successfully updated <strong>${store.name}</strong>. <a href="/store/${
-      store.slug
+    store.slug
     }">View Store →</a>`
   );
   res.redirect(`/stores/${store._id}/edit`);
@@ -101,4 +101,23 @@ exports.getStoresByTag = async (req, res) => {
   const storePromise = Store.find({ tags: tagQuery });
   const [tags, stores] = await Promise.all([tagsPromise, storePromise]);
   res.render('tag', { title: 'Tags', tags, tag, stores });
+};
+
+exports.searchStores = async (req, res) => {
+  const stores = await Store
+    // first find the stores that match
+    .find({
+      $text: {
+        $search: req.query.q
+      }
+    }, {
+        score: { $meta: 'textScore' }
+      })
+    // then sort them by their text score
+    .sort({
+      score: { $meta: 'textScore' }
+    })
+    // limit to only 5 results
+    .limit(5);
+  res.json(stores);
 };

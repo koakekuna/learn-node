@@ -1594,4 +1594,50 @@ exports.getStoresByTag = async (req, res) => {
 - look in the Readme for the email and passwords of the authors
 
 ## Lesson 31 - JSON endpoints and creating MongoDB Indexes
-- indexes support efficient execution of queries. MongoDB will pre scan the contents, making it much faster at completing queries.
+- indexes support efficient execution of queries. MongoDB will sort of pre-scan the contents, making it MUCH faster at completing queries. So if in your application, you know you're going to be querying something often, it's worth it to index it.
+- we already have `_id` indexed by default, and in our users model, we have email indexed as well, which most likely a plugin indexed for us
+- in `models/Store.js`
+  - we want to index the name and description of the store, so we can easily search for it
+  - we also specify how we would like it to be indexed as - in our case text
+  ```js
+  storeSchema.index({
+    name: 'text',
+    description: 'text'
+  });
+  ```
+- in `index.js`
+  - make a new section for dealing with our API
+  - create a new route to `/api/search` with a method on our store controller called searchStores
+  ```js
+  router.get('/api/search', catchErrors(storeController.searchStores));
+  ```
+- in `storeController.js`
+  - create the async method searchStores
+  - `req.query` will return all the queries being passed along via the URL, and we're looking for what's stored in q - `?q=store`
+  - we want to search through all the stores using `Store.find()` and await the results
+  - to filter the stores, we'll use a MongoDB text operator `$text`, which will perform a text on any fields indexed with a text index
+    - there are several options we pass through, but we'll want to include `$search`, to pass in our query `req.query.q`
+  - we also want to sort our results, based on how relevant the results are, through a field called "score"
+  - we'll add a second argument to `Store.find()`, which will be an object, and we're going to tell it to project (which in MongoDB means add a field) a "score". The score is going to made up of the metadata via an operator `$meta`, and the only metadata currently in MongoDB is "textScore".
+  - to actually sort the results, we'll chain a `.sort()` onto `Store.find()`, and use the same parameters as before
+  - finally we'll limit the results to the top 5 results
+  ```js
+  exports.searchStores = async (req, res) => {
+    const stores = await Store
+    // first find stores that match
+    .find({
+      $text: {
+        $search: req.query.q
+      }
+    }, {
+      score: { $meta: 'textScore' }
+    })
+    // then sort them
+    .sort({
+      score: { $meta: 'textScore' }
+    })
+    // limit to only 5 results
+    .limit(5);
+    res.json(stores);
+  };
+  ```
