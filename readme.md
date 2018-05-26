@@ -1641,3 +1641,26 @@ exports.getStoresByTag = async (req, res) => {
     res.json(stores);
   };
   ```
+
+## Lesson 32 - Creating an Ajax Search Interface
+- if we inspect the HTML search bar, we have an input with a class of `search__input` and a hidden div with a class of `search_results`
+- in a new file `public/javascripts/modules/typeAhead.js`
+  - import a library called axios
+  - create a function called typeAhead, which will take in the search box, and will be exported from the file
+  ```js
+  const axios = require('axios');
+
+  function typeAhead(search) {
+    console.log(search);
+  }
+
+  export default typeAhead;
+  ```
+- in `public/javascripts/delicious-app.js`
+  - import typeAhead
+  - run the function and pass it the contents of the search box
+  ```js
+  import typeAhead from './modules/typeAhead'
+
+  typeAhead( $(.search) );
+  ```
