@@ -980,8 +980,31 @@ Object.defineProperty(exports, "__esModule", {
 });
 var axios = __webpack_require__(12);
 
+function searchResultsHTML(stores) {
+  return stores.map(function (store) {
+    return '\n      <a href="/store/' + store.slug + '" class="search__result">\n        <strong>' + store.name + '</strong>\n      </a>\n    ';
+  }).join('');
+}
+
 function typeAhead(search) {
-  console.log(search);
+  if (!search) return;
+
+  var searchInput = document.querySelector('input[name="search"]');
+  var searchResults = document.querySelector('.search__results');
+
+  searchInput.on('input', function () {
+    if (!this.value) {
+      searchResults.style.display = 'none';
+      return;
+    }
+
+    searchResults.style.display = 'block';
+    searchResults.innerHTML = '';
+
+    axios.get('/api/search?q=' + this.value).then(function (res) {
+      searchResults.innerHTML = searchResultsHTML(res.data);
+    });
+  });
 }
 
 exports.default = typeAhead;

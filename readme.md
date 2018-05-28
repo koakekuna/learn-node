@@ -1664,3 +1664,66 @@ exports.getStoresByTag = async (req, res) => {
 
   typeAhead( $(.search) );
   ```
+- in `typeAhead.js`
+  - essentially how this is going to work is we are going to listen for when somebody types into the search box, then we're going to hit our API endpoint with the value that's typed into that box, and then wait for the results to come back, which we'll show in a dropdown menu.
+  - first we want to make sure that if the searchbox is not on the page, we don't want to run the function at all
+  - then we need to get the input and the results and store them
+  - next we need to listen for an input event on the searchbox (`.on` is bling.js shortcut for addEventListener)
+  - if there is no value in the input, we should hide the search results and stop the function
+  - otherwise we should display the search results
+    - make sure the search results innerHTML is blank if the search doesn't find anything (e.g. we initially find some results, but change our mind and backspace, then the results should disappear)
+  - we'll use axios to hit our endpoint
+    - we use the `.get()` axios method and specify the url for our endpoint
+    - then we chain a `.then()` to return a response
+  ```js
+  function typeAhead(search) {
+    if (!search) return;
+
+    const searchInput = document.querySelector('input[name="search"]');
+    const searchResults = document.querySelector('.search__results');
+
+    searchInput.on('input' function() {
+      // if there is no value, quit it!
+      if (!this.value) {
+        searchResults.style.display = 'none';
+        return; // stop!
+      }
+
+      // show the search results~
+      searchResults.style.display = 'block';
+      searchResults.innerHTML = '';
+
+      axios
+        .get(`/api/search?q=${this.value}`)
+        .then(res => {
+          console.log(res.data);
+        })
+    });
+  }
+  ```
+  - we'll make a new function called searchResultsHTML, which will take in an array of stores and return us some HTML
+    - we'll map over the stores, return some HTML with a link to the store, and the store name
+    - we'll join the array, since we just want one big string of HTML, not an array of strings
+  ```js
+  function searchResultsHTML(stores) {
+    return stores.map(store => {
+      return `
+        <a href="/stores/${store.slug}" class="search__result">
+          <strong>${store.name}</strong>
+        </a>
+      `
+    }).join('');
+  }
+  ```
+  - in our call to axios, we set the innerHTML of the search results to be the results of our new searchResultsHTML function.
+    - finally we catch an errors and send it to something like Sentry
+  ```js
+  axios
+    .get(`/api/search?q=${this.value}`)
+    .then( res => {
+      searchResults.innerHTML = searchResultsHTML(res.data);
+    })
+    .catch(err => {
+      console.log(err);
+    });
+  ```
