@@ -1697,7 +1697,7 @@ exports.getStoresByTag = async (req, res) => {
         .get(`/api/search?q=${this.value}`)
         .then(res => {
           console.log(res.data);
-        })
+      });
     });
   }
   ```
@@ -1716,7 +1716,7 @@ exports.getStoresByTag = async (req, res) => {
   }
   ```
   - in our call to axios, we set the innerHTML of the search results to be the results of our new searchResultsHTML function.
-    - finally we catch an errors and send it to something like Sentry
+    - finally we catch any errors and send it to an error tracking software like Sentry
   ```js
   axios
     .get(`/api/search?q=${this.value}`)
@@ -1726,4 +1726,20 @@ exports.getStoresByTag = async (req, res) => {
     .catch(err => {
       console.log(err);
     });
+  ```
+  - we also want to handle keyboard inputs
+    - first we check if the user isn't pressing on our target keys (up arrow, down arrow, or enter), then we simply just return
+    - then we need to add the basic functionality to each target key
+      - if a user presses up, it should move the active item up (or cycle to last item if it's the first)
+      - if a user presses down, it should move the active item down (or cycle to the first time if it's the last)
+      - if a user presses enter, it should open a link to that store
+  ```js
+  searchInput.on('keyup', (e) => {
+    if (![38, 40, 13].include(e.keyCode)) {
+      return;
+    }
+
+    if (e.keyCode === 38)
+
+  });
   ```
