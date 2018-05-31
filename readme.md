@@ -1727,19 +1727,44 @@ exports.getStoresByTag = async (req, res) => {
       console.log(err);
     });
   ```
-  - we also want to handle keyboard inputs
+  - how to handle keyboard inputs
     - first we check if the user isn't pressing on our target keys (up arrow, down arrow, or enter), then we simply just return
     - then we need to add the basic functionality to each target key
       - if a user presses up, it should move the active item up (or cycle to last item if it's the first)
       - if a user presses down, it should move the active item down (or cycle to the first time if it's the last)
       - if a user presses enter, it should open a link to that store
+    - search for a result with a class `search__result--active`, which we'll define as `current`
+    - search for all results with a class `.search__result`, which we'll define as items
+    - define `next`, which we'll use to establish the next active item
+    - if the user presses down and there's already an active item, then the next active item will be the next sibling OR if there is no next sibling (it's the last item), it should move to the first item
+    - if the user presses down and there's no active item, then the next active item will be the first item
+    - if the user presses up and there's already and active item, then the next active item will be the previous sibling OR if there is no next sibling (it's the first item), it should move to the last item
+    - if the user presses enter, it should activate the link on the current item
+    - finally we remove the activeClass from the current item and add it to the next item
   ```js
   searchInput.on('keyup', (e) => {
     if (![38, 40, 13].include(e.keyCode)) {
       return;
     }
+    const activeClass = 'search__result--active';
+    const current = search.querySelector(`.${activeClass}`);
+    const items = search.querySelectorAll('.search__result');
+    let next;
 
-    if (e.keyCode === 38)
+    if (e.keyCode === 40 && current) {
+      next = current.nextSiblingElement || items[0];
+    } else if (e.keyCode === 40) {
+      next = items[0];
+    } else if (e.keyCode === 38 && current) {
+      next = current.previousSiblingElement || items[items.length - 1];
+    } else if (e.keyCode === 38) {
+      next = items[items.length - 1];
+    } else if (e.keyCode === 13) {
+      window.location = current.href;
+    }
+
+    current.classList.remove(activeClass);
+    next.classList.add(activeClass);
 
   });
   ```
