@@ -1715,13 +1715,22 @@ exports.getStoresByTag = async (req, res) => {
     }).join('');
   }
   ```
-  - in our call to axios, we set the innerHTML of the search results to be the results of our new searchResultsHTML function.
+  - in our call to axios, we set the innerHTML of the search results to be the results of our new searchResultsHTML function
+    - however if a user types something and nothing is found, we also notify them with a message
+    - we'll also stop XSS attacks with domPurify
     - finally we catch any errors and send it to an error tracking software like Sentry
   ```js
+  import dompurify from 'dompurify';
+
   axios
     .get(`/api/search?q=${this.value}`)
-    .then( res => {
-      searchResults.innerHTML = searchResultsHTML(res.data);
+    .then(res => {
+      if {
+        searchResults.innerHTML = dompurify.sanitize(searchResultsHTML(res.data));
+        return;
+      } else {
+        searchResults.innerHTML = dompurify.sanitize(`<div class="search__result">No results for ${this.value} found!</div>`);
+      }
     })
     .catch(err => {
       console.log(err);
