@@ -1777,3 +1777,6 @@ exports.getStoresByTag = async (req, res) => {
 
   });
   ```
+
+## Lesson 33 - Creating a GeoSpatial Ajax Endpoint
+- 
