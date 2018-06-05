@@ -1779,4 +1779,5 @@ exports.getStoresByTag = async (req, res) => {
   ```
 
 ## Lesson 33 - Creating a GeoSpatial Ajax Endpoint
-- 
+- we're gonna create a store locator with Google Maps built in. We'll ping a URL given a lat and long, and that will return to us the top 10 closest stores that are within a 100km.
+- we'll need to index our data, create a route, and handile it our store controller.
