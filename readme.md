@@ -1781,3 +1781,43 @@ exports.getStoresByTag = async (req, res) => {
 ## Lesson 33 - Creating a GeoSpatial Ajax Endpoint
 - we're gonna create a store locator with Google Maps built in. We'll ping a URL given a lat and long, and that will return to us the top 10 closest stores that are within a 100km.
 - we'll need to index our data, create a route, and handile it our store controller.
+- in `models/Store.js`
+  - we'll index our location by storing it as geospatial data, which enables quick searches based on the lat and long
+  - first call `.index()` on our `storeSchema` and pass it an object
+    - specify the location is a ['2dsphere'](https://docs.mongodb.com/manual/core/2dsphere/)
+  ```js
+  storeSchema.index({ location: '2dsphere' });
+  ```
+- in `index.js`
+  - create a route with the url `/api/stores/near`, catch the errors, and we'll create a `mapStores` method on our controller
+  ```js
+  router.get('/api/stores/near', catchErrors(storeController.mapStores));
+  ```
+- in `storeController.js`
+  - create the method `mapStores` where we'll query the database with the lat and lng from the URL
+  - first store the location data in an array called coordinates
+    - remember the MongoDB positioning of [lng, lat]
+    - also convert from strings to floats
+  - next we'll make our query in a separate object `q`
+    - we want to search the stores where the location property is near using the MongoDB operator `$near`
+    - we'll use `$geometry` to specify the type and coordinates
+    - we'll also specify the max distance in kilometers with `$maxDistance`
+  - finally we'll await our query and return the results
+  ```js
+  exports.mapStore = async (req, res) {
+    const coordinates = [req.query.lng, req.query.lat].map(parseFloat);
+    const q = {
+      location: {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates
+          },
+          $maxDistance: 10000
+        }
+      }
+    };
+    const stores = await Store.find(q);
+    res.json(stores);
+  };
+  ```
