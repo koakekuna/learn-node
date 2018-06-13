@@ -1803,6 +1803,7 @@ exports.getStoresByTag = async (req, res) => {
     - we'll use `$geometry` to specify the type and coordinates
     - we'll also specify the max distance in kilometers with `$maxDistance`
   - finally we'll await our query and return the results
+  - use `select()` method to specify the data we'd like to return and `limit()` to limit the results
   ```js
   exports.mapStore = async (req, res) {
     const coordinates = [req.query.lng, req.query.lat].map(parseFloat);
@@ -1817,7 +1818,70 @@ exports.getStoresByTag = async (req, res) => {
         }
       }
     };
-    const stores = await Store.find(q);
-    res.json(stores);
+    const stores = await Store.find(q).select('slug name description location').limit(10);
   };
   ```
+## Lesson 34 - Plotting Stores on a Custom Google Map
+- in `index.js`
+  - create a route for a map page as well as a method on our storeController
+  ```js
+  router.get('/map', storeController.mapPage);
+  ```
+- in `storeController.js`
+  - create the method `mapPage`, which will render a view called map
+  ```js
+  exports.mapPage = (req, res) => {
+    res.render('map', { title: 'Map' });
+  };
+  ```
+- create `views/map.pug`
+  - we'll have an input form with a name of "geolocate"
+  ```pug
+  extends layout
+
+  block content
+    .inner
+      h2= title
+      .map
+        .autocomplete
+          input.autocomplete__input(type="text" placeholder="Search for Anything" name="geolocate")
+        #map
+          p Loading Map...
+  ```
+- create `public/modules/map.js`
+  - import axios and bling.js
+  - create a new function `makeMap()` that takes in a 'mapDiv'
+  - if there isn't a mapDiv on the current page, then just return the function
+  - create a mapOptions, specifying the lng, lat, and zoom
+  - create a new map using the Google Maps api (whose scripts are already loaded in layout.pug)
+    - pass in where it should go (mapDiv) as well as some options (mapOptions)
+  - create a variable input, which stores the input with bling
+  - enable autocomplete by creating an autocomplete variable, which will be passed in the input from above
+  - create a new function `loadPlaces()` that takes in a map, lat, and lng
+  ```js
+  import axios from 'axios';
+  import { $ } from './bling';
+
+  const mapOptions = {
+    center: { lat: 43.2, lng: -79.8 },
+    zoom: 2
+  }
+
+  function loadPlaces(map, lat = 43.2, lng = -79.8) {
+    axios.get(`/api/stores/near?lat=${lat}&lng=${lng}`)
+      .then();
+  }
+
+  function makeMap(mapDiv) {
+    if(!mapDiv) return;
+    // make our map
+    const map = new google.maps.Map(mapDiv, mapOptions);
+    const input = $('[name="geolocate"]');
+    const autocomplete = new google.maps.places.Autocomplete(input);
+  }
+
+  export default makeMap;
+  ```
+
+- in `delicious-app.js`
+  - import `makeMap` and call it while passing in our `#map` div
