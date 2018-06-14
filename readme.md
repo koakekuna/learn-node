@@ -1819,6 +1819,7 @@ exports.getStoresByTag = async (req, res) => {
       }
     };
     const stores = await Store.find(q).select('slug name description location').limit(10);
+    res.json(stores);
   };
   ```
 ## Lesson 34 - Plotting Stores on a Custom Google Map
@@ -1850,37 +1851,66 @@ exports.getStoresByTag = async (req, res) => {
   ```
 - create `public/modules/map.js`
   - import axios and bling.js
+   ```js
+  import axios from 'axios';
+  import { $ } from './bling';
+  ```
   - create a new function `makeMap()` that takes in a 'mapDiv'
   - if there isn't a mapDiv on the current page, then just return the function
   - create a mapOptions, specifying the lng, lat, and zoom
   - create a new map using the Google Maps api (whose scripts are already loaded in layout.pug)
     - pass in where it should go (mapDiv) as well as some options (mapOptions)
-  - create a variable input, which stores the input with bling
+  - call a function loadMaps function, which we'll create, and pass in our map
+  - create a variable input, which will store the input element
   - enable autocomplete by creating an autocomplete variable, which will be passed in the input from above
-  - create a new function `loadPlaces()` that takes in a map, lat, and lng
   ```js
-  import axios from 'axios';
-  import { $ } from './bling';
-
   const mapOptions = {
     center: { lat: 43.2, lng: -79.8 },
     zoom: 2
-  }
-
-  function loadPlaces(map, lat = 43.2, lng = -79.8) {
-    axios.get(`/api/stores/near?lat=${lat}&lng=${lng}`)
-      .then();
   }
 
   function makeMap(mapDiv) {
     if(!mapDiv) return;
     // make our map
     const map = new google.maps.Map(mapDiv, mapOptions);
+    loadPlaces(map);
+
     const input = $('[name="geolocate"]');
     const autocomplete = new google.maps.places.Autocomplete(input);
   }
 
   export default makeMap;
+  ```
+  - create a new function `loadPlaces()` that takes in a map, lat, and lng
+  - use axios to hit our api with lat and lng as query params
+  - then store the response in a variable called places
+    - check if there are places in the first place, and flash an error if not
+  - then create the map markers by using `map()` on places
+    - store the lng and lat we queried from the database (remember the database sends it as [lng, lat])
+    - store the position as an object (with the lat and lng now switched)
+    - create each marker on our map by passing in our map element and position
+    - store the place data (which will give us access to data like store name, description, etc) onto each marker so we'll have access to it later
+    - finally return the marker
+  ```js
+  function loadPlaces(map, lat = 43.2, lng = -79.8) {
+    axios.get(`/api/stores/near?lat=${lat}&lng=${lng}`)
+      .then( res => {
+        const places = res.data;
+
+        if (!places.length) {
+          req.flash('error', `Could not find any stores with a lat of ${lat}? and a lng of ${lng}`);
+          return;
+        }
+
+        const markers = places.map(place => {
+          const [placeLng, placeLat] = place.location.coordinates;
+          const position = { lat: placeLat, lng: placeLng };
+          const marker = new google.maps.Marker({ map, position });
+          marker.place = place;
+          return marker;
+        });
+      });
+  }
   ```
 
 - in `delicious-app.js`
