@@ -1902,6 +1902,9 @@ exports.getStoresByTag = async (req, res) => {
           return;
         }
 
+        // create a bounds
+        const bounds = new google.mapsLatLngBounds();
+
         const markers = places.map(place => {
           const [placeLng, placeLat] = place.location.coordinates;
           const position = { lat: placeLat, lng: placeLng };
@@ -1909,6 +1912,9 @@ exports.getStoresByTag = async (req, res) => {
           marker.place = place;
           return marker;
         });
+
+        // then zoon the map to fit all the markers perfectly
+        map.setCenter(getCenter());
       });
   }
   ```
