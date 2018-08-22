@@ -1015,18 +1015,23 @@ function loadPlaces(map) {
       return;
     }
 
-    console.log(places);
+    var bounds = new google.maps.LatLngBounds();
+
     var markers = places.map(function (place) {
       var _place$location$coord = _slicedToArray(place.location.coordinates, 2),
           placeLng = _place$location$coord[0],
           placeLat = _place$location$coord[1];
 
       var position = { lat: placeLat, lng: placeLng };
+      bounds.extend(position);
       var marker = new google.maps.Marker({ map: map, position: position });
       marker.place = place;
       return marker;
     });
-    console.log(markers);
+
+    // then zoom the map to fit all the markers perfectly
+    map.setCenter(bounds.getCenter());
+    map.fitBounds(bounds);
   });
 }
 

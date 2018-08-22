@@ -1889,8 +1889,9 @@ exports.getStoresByTag = async (req, res) => {
     - store the lng and lat we queried from the database (remember the database sends it as [lng, lat])
     - store the position as an object (with the lat and lng now switched)
     - create each marker on our map by passing in our map element and position
-    - store the place data (which will give us access to data like store name, description, etc) onto each marker so we'll have access to it later
-    - finally return the marker
+    - store the place data (which will give us access to data like store name, description, etc) onto each marker so we'll have access to it later, and then finally return the marker
+  - instead of guessing the zoom level, we can use something called bounds. Then we can extend the bounds for each marker's position.
+  - finally we can set the map center to be the center of the bounds, and then fit it (zoom in).
   ```js
   function loadPlaces(map, lat = 43.2, lng = -79.8) {
     axios.get(`/api/stores/near?lat=${lat}&lng=${lng}`)
@@ -1908,13 +1909,15 @@ exports.getStoresByTag = async (req, res) => {
         const markers = places.map(place => {
           const [placeLng, placeLat] = place.location.coordinates;
           const position = { lat: placeLat, lng: placeLng };
+          bounds.extend(position);
           const marker = new google.maps.Marker({ map, position });
           marker.place = place;
           return marker;
         });
 
         // then zoon the map to fit all the markers perfectly
-        map.setCenter(getCenter());
+        map.setCenter(bounds.getCenter());
+        map.fitBounds(bounds);
       });
   }
   ```
