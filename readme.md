@@ -1892,6 +1892,7 @@ exports.getStoresByTag = async (req, res) => {
     - store the place data (which will give us access to data like store name, description, etc) onto each marker so we'll have access to it later, and then finally return the marker
   - instead of guessing the zoom level, we can use something called bounds. Then we can extend the bounds for each marker's position.
   - finally we can set the map center to be the center of the bounds, and then fit it (zoom in).
+  - when a user clicks a marker, we want an info window to appear and display the place's name
   ```js
   function loadPlaces(map, lat = 43.2, lng = -79.8) {
     axios.get(`/api/stores/near?lat=${lat}&lng=${lng}`)
@@ -1905,6 +1906,7 @@ exports.getStoresByTag = async (req, res) => {
 
         // create a bounds
         const bounds = new google.mapsLatLngBounds();
+        const infoWindow = new google.maps.InfoWindow();
 
         const markers = places.map(place => {
           const [placeLng, placeLat] = place.location.coordinates;
@@ -1914,6 +1916,19 @@ exports.getStoresByTag = async (req, res) => {
           marker.place = place;
           return marker;
         });
+
+        markers.forEach(marker => marker.addListener('click', function() {
+          const html = `
+          <div class="popup">
+            <a href="/stores/${this.place.slug}">
+              <img src="/uploads/${this.place.photo || 'store.png'}" alt="${this.place.name}" />
+              <p>${this.place.name} - ${this.place.location.address}</p>
+            </a>
+          </div>
+          `
+          infoWindow.setContent(html);
+          infoWindow.open(map, this);
+        }))
 
         // then zoon the map to fit all the markers perfectly
         map.setCenter(bounds.getCenter());

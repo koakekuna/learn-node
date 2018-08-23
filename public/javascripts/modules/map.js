@@ -17,6 +17,7 @@ function loadPlaces(map, lat = 43.2, lng = -79.8) {
       }
 
       const bounds = new google.maps.LatLngBounds();
+      const infoWindow = new google.maps.infoWindow();
 
       const markers = places.map(place => {
         const [placeLng, placeLat] = place.location.coordinates;
@@ -26,6 +27,19 @@ function loadPlaces(map, lat = 43.2, lng = -79.8) {
         marker.place = place;
         return marker;
       });
+
+      markers.forEach(marker => marker.addListener('click', function () {
+        const html = `
+          <div class="popup">
+            <a href="/stores/${this.place.slug}">
+              <img src="/uploads/${this.place.photo || 'store.png'}" alt="${this.place.name}" />
+              <p>${this.place.name} - ${this.place.location.address}</p>
+            </a>
+          </div>
+          `
+        infoWindow.setContent(html);
+        infoWindow.open(map, this);
+      }));
 
       // then zoom the map to fit all the markers perfectly
       map.setCenter(bounds.getCenter());
