@@ -1008,7 +1008,6 @@ function loadPlaces(map) {
   var lng = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : -79.8;
 
   _axios2.default.get('/api/stores/near?lat=' + lat + '&lng=' + lng).then(function (res) {
-    console.log(res.data);
     var places = res.data;
     if (!places.length) {
       req.flash('error', 'Could not find any stores with a lat of ' + lat + '? and a lng of ' + lng);
@@ -1016,6 +1015,7 @@ function loadPlaces(map) {
     }
 
     var bounds = new google.maps.LatLngBounds();
+    var infoWindow = new google.maps.InfoWindow();
 
     var markers = places.map(function (place) {
       var _place$location$coord = _slicedToArray(place.location.coordinates, 2),
@@ -1027,6 +1027,14 @@ function loadPlaces(map) {
       var marker = new google.maps.Marker({ map: map, position: position });
       marker.place = place;
       return marker;
+    });
+
+    markers.forEach(function (marker) {
+      return marker.addListener('click', function () {
+        var html = '\n          <div class="popup">\n            <a href="/stores/' + this.place.slug + '">\n              <img src="/uploads/' + (this.place.photo || 'store.png') + '" alt="' + this.place.name + '" />\n              <p>' + this.place.name + ' - ' + this.place.location.address + '</p>\n            </a>\n          </div>\n          ';
+        infoWindow.setContent(html);
+        infoWindow.open(map, this);
+      });
     });
 
     // then zoom the map to fit all the markers perfectly
@@ -1042,6 +1050,10 @@ function makeMap(mapDiv) {
 
   var input = (0, _bling.$)('[name="geolocate"]');
   var autocomplete = new google.maps.places.Autocomplete(input);
+  autocomplete.addListener('place_changed', function () {
+    var place = autocomplete.getPlace();
+    loadPlaces(map, place.geometry.location.lat(), place.geometry.location.lng());
+  });
 }
 
 exports.default = makeMap;

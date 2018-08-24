@@ -1905,7 +1905,7 @@ exports.getStoresByTag = async (req, res) => {
         }
 
         // create a bounds
-        const bounds = new google.mapsLatLngBounds();
+        const bounds = new google.maps.LatLngBounds();
         const infoWindow = new google.maps.InfoWindow();
 
         const markers = places.map(place => {
@@ -1925,10 +1925,10 @@ exports.getStoresByTag = async (req, res) => {
               <p>${this.place.name} - ${this.place.location.address}</p>
             </a>
           </div>
-          `
+          `;
           infoWindow.setContent(html);
           infoWindow.open(map, this);
-        }))
+        }));
 
         // then zoon the map to fit all the markers perfectly
         map.setCenter(bounds.getCenter());
@@ -1936,6 +1936,26 @@ exports.getStoresByTag = async (req, res) => {
       });
   }
   ```
+  - in our makeMap function, we add an event listener to the autocomplete, and then reload the map with the correct lat and lng of the users selection
+  ```js
+    function makeMap(mapDiv) {
+    if (!mapDiv) return;
+    const map = new google.maps.Map(mapDiv, mapOptions);
+    loadPlaces(map);
+
+    const input = $('[name="geolocate"]');
+    const autocomplete = new google.maps.places.Autocomplete(input);
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      loadPlaces(map, place.geometry.location.lat(), place.geometry.location.lng());
+    });
+  }
+  ```
 
 - in `delicious-app.js`
   - import `makeMap` and call it while passing in our `#map` div
+- in `storeController.js`
+  - add 'photo' to the list of data to request from the database
+  ```js
+  const stores = await Store.find(q).select('slug name description location photo').limit(10);
+  ```

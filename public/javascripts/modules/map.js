@@ -9,7 +9,6 @@ const mapOptions = {
 function loadPlaces(map, lat = 43.2, lng = -79.8) {
   axios.get(`/api/stores/near?lat=${lat}&lng=${lng}`)
     .then(res => {
-      console.log(res.data);
       const places = res.data;
       if (!places.length) {
         req.flash('error', `Could not find any stores with a lat of ${lat}? and a lng of ${lng}`);
@@ -17,7 +16,7 @@ function loadPlaces(map, lat = 43.2, lng = -79.8) {
       }
 
       const bounds = new google.maps.LatLngBounds();
-      const infoWindow = new google.maps.infoWindow();
+      const infoWindow = new google.maps.InfoWindow();
 
       const markers = places.map(place => {
         const [placeLng, placeLat] = place.location.coordinates;
@@ -36,7 +35,7 @@ function loadPlaces(map, lat = 43.2, lng = -79.8) {
               <p>${this.place.name} - ${this.place.location.address}</p>
             </a>
           </div>
-          `
+          `;
         infoWindow.setContent(html);
         infoWindow.open(map, this);
       }));
@@ -54,6 +53,10 @@ function makeMap(mapDiv) {
 
   const input = $('[name="geolocate"]');
   const autocomplete = new google.maps.places.Autocomplete(input);
+  autocomplete.addListener('place_changed', () => {
+    const place = autocomplete.getPlace();
+    loadPlaces(map, place.geometry.location.lat(), place.geometry.location.lng());
+  });
 }
 
 export default makeMap;
